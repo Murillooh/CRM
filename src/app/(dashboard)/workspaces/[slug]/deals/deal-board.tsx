@@ -73,12 +73,12 @@ export function DealBoard({ workspaceSlug, stages }: { workspaceSlug: string; st
               dragOverStageId === stage.id ? "border-primary/60 bg-primary/5" : "border-border/50 bg-muted/30"
             }`}
           >
-            <div className="p-3 flex items-center justify-between border-b border-border/50 bg-muted/50 rounded-t-xl">
+            <div className="p-3 flex items-center justify-between border-b border-border/50 bg-background/50 backdrop-blur-md rounded-t-xl sticky top-0 z-10">
               <h3 className="font-semibold text-sm text-foreground flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-primary"></div>
+                <div className="w-2.5 h-2.5 rounded-full shadow-[0_0_8px_rgba(var(--primary),0.8)] bg-primary"></div>
                 {stage.name}
               </h3>
-              <Badge variant="secondary" className="font-mono text-xs">{stage.deals.length}</Badge>
+              <Badge variant="secondary" className="font-mono text-xs bg-background shadow-sm border-border/50">{stage.deals.length}</Badge>
             </div>
 
             <div className="flex-1 overflow-y-auto p-3 space-y-3">
@@ -100,41 +100,47 @@ export function DealBoard({ workspaceSlug, stages }: { workspaceSlug: string; st
                       e.dataTransfer.setData("text/deal-id", deal.id);
                       e.dataTransfer.setData("text/from-stage-id", stage.id);
                     }}
-                    className={`group relative block bg-card border rounded-lg p-4 shadow-sm hover:shadow-md transition-all hover:border-primary/30 cursor-grab active:cursor-grabbing ${
+                    className={`group relative block bg-card/80 backdrop-blur-sm border border-border/40 rounded-xl p-4 shadow-sm hover:shadow-lg hover:-translate-y-0.5 hover:border-primary/40 transition-all cursor-grab active:cursor-grabbing ${
                       isPending ? "opacity-60" : ""
                     }`}
                     aria-label={`Negócio: ${deal.title}`}
                   >
-                    <GripVertical className="absolute right-2 top-2 h-4 w-4 text-muted-foreground/0 group-hover:text-muted-foreground/50 transition-colors hidden md:block" />
+                    <GripVertical className="absolute right-2 top-2 h-4 w-4 text-muted-foreground/0 group-hover:text-muted-foreground/40 transition-colors hidden md:block" />
 
-                    <h4 className="font-medium text-sm text-foreground mb-2 leading-tight pr-6">
-                      {deal.title}
-                    </h4>
-
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground mb-4">
-                      {deal.company ? (
-                        <span className="flex items-center gap-1 bg-muted/50 px-1.5 py-0.5 rounded">
-                          <Building2 className="w-3 h-3" />
-                          <span className="truncate max-w-[120px]">{deal.company.name}</span>
-                        </span>
-                      ) : deal.contact ? (
-                        <span className="flex items-center gap-1 bg-muted/50 px-1.5 py-0.5 rounded">
-                          <User className="w-3 h-3" />
-                          <span className="truncate max-w-[120px]">{deal.contact.name}</span>
-                        </span>
-                      ) : null}
-                    </div>
-
-                    <div className="flex items-center justify-between mt-auto">
-                      <span className="font-mono font-semibold text-sm text-emerald-600 dark:text-emerald-400">
-                        {deal.currency} {deal.value?.toLocaleString() || 0}
-                      </span>
-
-                      <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
-                        <Clock className="w-3 h-3" />
-                        {formatDistanceToNow(deal.updatedAt, { addSuffix: true, locale: ptBR })}
+                      <div className="flex justify-between items-start mb-3">
+                        <h4 className="font-semibold text-sm text-foreground leading-tight pr-6 line-clamp-2">
+                          {deal.title}
+                        </h4>
                       </div>
-                    </div>
+
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground mb-4">
+                        {deal.company ? (
+                          <span className="flex items-center gap-1.5 bg-muted/50 px-2 py-1 rounded-md border border-border/50">
+                            <div className="w-4 h-4 rounded-full bg-primary/20 text-primary flex items-center justify-center text-[8px] font-bold">
+                              {deal.company.name.charAt(0).toUpperCase()}
+                            </div>
+                            <span className="truncate max-w-[120px] font-medium">{deal.company.name}</span>
+                          </span>
+                        ) : deal.contact ? (
+                          <span className="flex items-center gap-1.5 bg-muted/50 px-2 py-1 rounded-md border border-border/50">
+                            <div className="w-4 h-4 rounded-full bg-primary/20 text-primary flex items-center justify-center text-[8px] font-bold">
+                              {deal.contact.name.charAt(0).toUpperCase()}
+                            </div>
+                            <span className="truncate max-w-[120px] font-medium">{deal.contact.name}</span>
+                          </span>
+                        ) : null}
+                      </div>
+
+                      <div className="flex items-center justify-between mt-auto pt-3 border-t border-border/40">
+                        <span className="font-mono font-bold text-sm text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded">
+                          {deal.currency} {deal.value?.toLocaleString() || 0}
+                        </span>
+
+                        <div className="flex items-center gap-1 text-[10px] text-muted-foreground font-medium">
+                          <Clock className="w-3 h-3" />
+                          {formatDistanceToNow(deal.updatedAt, { addSuffix: true, locale: ptBR })}
+                        </div>
+                      </div>
                   </Link>
                 ))
               )}
