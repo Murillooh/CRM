@@ -30,6 +30,12 @@ export default async function DashboardPage(props: { params: Promise<{ slug: str
 
   const totalValue = dealsAggregation._sum.value?.toNumber() || 0;
   
+  // Converter Decimal para Number (Next.js server->client serialization)
+  const serializedRecentDeals = recentDeals.map(deal => ({
+    ...deal,
+    value: deal.value ? deal.value.toNumber() : 0,
+  }));
+
   // Formatar moeda brasileira
   const formatter = new Intl.NumberFormat('pt-BR', {
     style: 'currency',
@@ -120,7 +126,7 @@ export default async function DashboardPage(props: { params: Promise<{ slug: str
         </div>
 
         {/* Gráficos Interativos (Nova feature) */}
-        <DashboardCharts recentDeals={recentDeals} />
+        <DashboardCharts recentDeals={serializedRecentDeals} />
 
         {/* Negócios Recentes */}
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
@@ -129,7 +135,7 @@ export default async function DashboardPage(props: { params: Promise<{ slug: str
               <CardTitle>Negócios Recentes</CardTitle>
             </CardHeader>
             <CardContent>
-              {recentDeals.length === 0 ? (
+              {serializedRecentDeals.length === 0 ? (
                 <div className="text-center py-10 text-muted-foreground flex flex-col items-center">
                   <div className="w-12 h-12 bg-muted/50 rounded-full flex items-center justify-center mb-4">
                     <Briefcase className="w-5 h-5 text-muted-foreground/50" />
@@ -145,7 +151,7 @@ export default async function DashboardPage(props: { params: Promise<{ slug: str
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {recentDeals.slice(0, 5).map(deal => (
+                  {serializedRecentDeals.slice(0, 5).map(deal => (
                     <div key={deal.id} className="flex items-center group p-2 hover:bg-muted/30 rounded-lg transition-colors">
                       <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center text-primary font-bold shadow-inner">
                         {deal.title.charAt(0).toUpperCase()}
@@ -157,7 +163,7 @@ export default async function DashboardPage(props: { params: Promise<{ slug: str
                         </p>
                       </div>
                       <div className="ml-auto font-bold text-sm text-foreground">
-                        {formatter.format(deal.value?.toNumber() || 0)}
+                        {formatter.format(deal.value)}
                       </div>
                     </div>
                   ))}
