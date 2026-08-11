@@ -60,8 +60,34 @@
     --input: 240 5.9% 90%;
     --ring: 240 10% 3.9%;
     --radius: 0.5rem;
+
+    /* Tokens de gráfico (skill dataviz) — paleta categórica em ordem fixa, nunca ciclada */
+    --chart-surface: #fcfcfb;
+    --chart-text-primary: #0b0b0b;
+    --chart-text-secondary: #52514e;
+    --chart-text-muted: #898781;
+    --chart-gridline: #e1e0d9;
+    --chart-baseline: #c3c2b7;
+    --chart-series-1: #2a78d6; /* blue */
+    --chart-series-2: #eb6834; /* orange */
+    --chart-series-3: #1baf7a; /* aqua */
+    --chart-series-4: #eda100; /* yellow */
+    --chart-status-good: #0ca30c;
+    --chart-status-critical: #d03b3b;
   }
   .dark {
+    --chart-surface: #1a1a19;
+    --chart-text-primary: #ffffff;
+    --chart-text-secondary: #c3c2b7;
+    --chart-text-muted: #898781;
+    --chart-gridline: #2c2c2a;
+    --chart-baseline: #383835;
+    --chart-series-1: #3987e5;
+    --chart-series-2: #d95926;
+    --chart-series-3: #199e70;
+    --chart-series-4: #c98500;
+    --chart-status-good: #0ca30c;
+    --chart-status-critical: #e66767;
     --background: 240 10% 3.9%;
     --foreground: 0 0% 98%;
     --card: 240 10% 3.9%;

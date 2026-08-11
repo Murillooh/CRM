@@ -1,0 +1,16 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/tick",
+      "schedule": "0 8 * * *"
+    },
+    {
+      "path": "/api/cron/email-sync",
+      "schedule": "0 9 * * *"
+    },
+    {
+      "path": "/api/cron/email-nurture",
+      "schedule": "0 10 * * *"
+    }
+  ]
+}

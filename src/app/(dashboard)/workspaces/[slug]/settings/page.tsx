@@ -1,18 +1,37 @@
 import { db } from "@/lib/db";
 import { requireWorkspaceAccess } from "@/lib/auth/guard";
 import { SettingsForm } from "./settings-form";
-import { Shield, Users } from "lucide-react";
+import { EmailAccountsSection } from "./email-accounts-section";
+import { SignatureForm } from "./signature-form";
+import { Shield, Users, Mail } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
-export default async function SettingsPage(props: { params: Promise<{ slug: string }> }) {
+export default async function SettingsPage(props: {
+  params: Promise<{ slug: string }>;
+  searchParams: Promise<{ email_connected?: string; email_error?: string }>;
+}) {
   const params = await props.params;
-  const { workspace, role } = await requireWorkspaceAccess(params.slug);
+  const searchParams = await props.searchParams;
+  const { user, workspace, role } = await requireWorkspaceAccess(params.slug);
 
-  const memberships = await db.membership.findMany({
-    where: { workspaceId: workspace.id },
-    include: { user: true },
-    orderBy: { role: 'asc' } // OWNER first, then ADMIN, then MEMBER
-  });
+  const [memberships, emailAccounts, me] = await Promise.all([
+    db.membership.findMany({
+      where: { workspaceId: workspace.id },
+      include: { user: true },
+      orderBy: { role: 'asc' } // OWNER first, then ADMIN, then MEMBER
+    }),
+    db.emailAccount.findMany({
+      where: { workspaceId: workspace.id },
+      orderBy: { createdAt: 'asc' },
+    }),
+    db.user.findUnique({ where: { id: user.id }, select: { emailSignature: true } }),
+  ]);
+
+  const banner = searchParams.email_connected
+    ? ({ type: "connected" } as const)
+    : searchParams.email_error
+    ? ({ type: "error", message: searchParams.email_error } as const)
+    : null;
 
   return (
     <div className="flex h-full flex-col">
@@ -81,6 +100,32 @@ export default async function SettingsPage(props: { params: Promise<{ slug: stri
                     ))}
                   </tbody>
                 </table>
+              </div>
+            </div>
+          </div>
+
+          <hr className="border-border" />
+
+          {/* Sessão de E-mail (Módulo 5 — Email Sync) */}
+          <div className="grid gap-6 md:grid-cols-[1fr_2fr]">
+            <div>
+              <h3 className="text-lg font-semibold flex items-center gap-2">
+                <Mail className="w-5 h-5" />
+                E-mail
+              </h3>
+              <p className="text-sm text-muted-foreground mt-1">
+                Conecte sua caixa Gmail pra sincronizar e-mails na timeline e enviar direto do CRM.
+              </p>
+            </div>
+
+            <div className="space-y-6">
+              <div className="bg-card border rounded-lg p-6 shadow-sm">
+                <EmailAccountsSection workspaceSlug={params.slug} accounts={emailAccounts} banner={banner} />
+              </div>
+
+              <div className="bg-card border rounded-lg p-6 shadow-sm">
+                <h4 className="text-sm font-semibold mb-3">Sua assinatura</h4>
+                <SignatureForm workspaceSlug={params.slug} signature={me?.emailSignature ?? null} />
               </div>
             </div>
           </div>

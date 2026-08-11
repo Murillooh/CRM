@@ -2,14 +2,84 @@
 
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { useCompletion } from "@ai-sdk/react";
-import { useEffect, useState } from "react";
-import { Sparkles, Loader2, ArrowRight, Mail, Thermometer, Info } from "lucide-react";
+import { useEffect, useState, useTransition } from "react";
+import { Sparkles, Loader2, ArrowRight, Mail, Thermometer, Info, Trophy, ShieldCheck, ShieldX, Clock, XCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { SendEmailDialog } from "@/components/email/send-email-dialog";
+import { markDealWon, markDealLost, approveDealDiscount, rejectDealDiscount } from "@/app/actions/deals";
 
-export function DealSheet({ workspaceSlug, dealId }: { workspaceSlug: string, dealId: string | null }) {
+interface DealSummary {
+  status: "OPEN" | "WON" | "LOST";
+  approvalStatus: "NONE" | "PENDING" | "APPROVED" | "REJECTED";
+  discountPercent: number | null;
+}
+
+interface DealSheetProps {
+  workspaceSlug: string;
+  dealId: string | null;
+  emailAccounts?: { id: string; emailAddress: string }[];
+  contactEmail?: string | null;
+  dealSummary?: DealSummary | null;
+  canApprove?: boolean;
+}
+
+export function DealSheet({
+  workspaceSlug,
+  dealId,
+  emailAccounts = [],
+  contactEmail = null,
+  dealSummary = null,
+  canApprove = false,
+}: DealSheetProps) {
   const router = useRouter();
-  
+
+  const [discountInput, setDiscountInput] = useState(0);
+  const [closeError, setCloseError] = useState<string | null>(null);
+  const [isClosing, startClosing] = useTransition();
+  const [isApproving, startApproving] = useTransition();
+
+  function handleMarkWon() {
+    if (!dealId) return;
+    setCloseError(null);
+    startClosing(async () => {
+      try {
+        await markDealWon(workspaceSlug, dealId, discountInput);
+      } catch (err: any) {
+        setCloseError(err?.message || "Erro ao marcar como ganho.");
+      }
+    });
+  }
+
+  function handleMarkLost() {
+    if (!dealId) return;
+    if (!confirm("Marcar esse negócio como perdido?")) return;
+    setCloseError(null);
+    startClosing(async () => {
+      try {
+        await markDealLost(workspaceSlug, dealId);
+      } catch (err: any) {
+        setCloseError(err?.message || "Erro ao marcar como perdido.");
+      }
+    });
+  }
+
+  function handleApprove() {
+    if (!dealId) return;
+    startApproving(async () => {
+      await approveDealDiscount(workspaceSlug, dealId);
+    });
+  }
+
+  function handleReject() {
+    if (!dealId) return;
+    startApproving(async () => {
+      await rejectDealDiscount(workspaceSlug, dealId);
+    });
+  }
+
   const { completion: summary, complete: completeSummary, isLoading: isLoadingSummary, stop: stopSummary } = useCompletion({
     api: `/api/v1/workspaces/${workspaceSlug}/ai/summary`,
   });
@@ -156,7 +226,84 @@ export function DealSheet({ workspaceSlug, dealId }: { workspaceSlug: string, de
               Gere um rascunho de follow-up baseado no histórico atual.
             </p>
           )}
+
+          <div className="mt-3 flex justify-end">
+            <SendEmailDialog
+              workspaceSlug={workspaceSlug}
+              emailAccounts={emailAccounts}
+              dealId={dealId ?? undefined}
+              defaultTo={contactEmail ?? undefined}
+              defaultBody={emailDraft || undefined}
+            />
+          </div>
         </div>
+
+        {/* Fechar Negócio + Aprovação condicional de desconto (Módulo 8) */}
+        {dealSummary && dealSummary.status !== "WON" && (
+          <div className="border border-border/50 bg-muted/20 rounded-xl p-4 mb-8">
+            <div className="flex items-center gap-2 mb-3">
+              <Trophy className="w-4 h-4 text-muted-foreground" />
+              <h3 className="font-semibold text-sm">Fechar Negócio</h3>
+            </div>
+
+            {dealSummary.approvalStatus === "PENDING" ? (
+              <div className="space-y-3">
+                <div className="flex items-start gap-2 p-3 rounded-md bg-amber-100 text-amber-800 text-xs dark:bg-amber-900/30 dark:text-amber-400">
+                  <Clock className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+                  Aguardando aprovação de desconto ({dealSummary.discountPercent}%) por um Manager antes de marcar como ganho.
+                </div>
+                {canApprove && (
+                  <div className="flex gap-2">
+                    <Button size="sm" className="gap-1" onClick={handleApprove} disabled={isApproving}>
+                      {isApproving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ShieldCheck className="w-3.5 h-3.5" />}
+                      Aprovar
+                    </Button>
+                    <Button size="sm" variant="outline" className="gap-1" onClick={handleReject} disabled={isApproving}>
+                      <ShieldX className="w-3.5 h-3.5" />
+                      Rejeitar
+                    </Button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <div className="flex items-end gap-2">
+                  <div className="grid gap-1 flex-1">
+                    <label htmlFor="discountPercent" className="text-xs text-muted-foreground">Desconto aplicado (%)</label>
+                    <Input
+                      id="discountPercent"
+                      type="number"
+                      min={0}
+                      max={100}
+                      value={discountInput}
+                      onChange={(e) => setDiscountInput(Number(e.target.value))}
+                      disabled={isClosing}
+                      className="h-9"
+                    />
+                  </div>
+                  <Button size="sm" className="gap-1" onClick={handleMarkWon} disabled={isClosing}>
+                    {isClosing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trophy className="w-3.5 h-3.5" />}
+                    Marcar como Ganho
+                  </Button>
+                </div>
+                <div className="flex justify-end">
+                  <Button size="sm" variant="ghost" className="gap-1 text-muted-foreground" onClick={handleMarkLost} disabled={isClosing}>
+                    <XCircle className="w-3.5 h-3.5" />
+                    Marcar como Perdido
+                  </Button>
+                </div>
+                {closeError && <p className="text-xs text-red-600">{closeError}</p>}
+              </div>
+            )}
+          </div>
+        )}
+
+        {dealSummary?.status === "WON" && (
+          <div className="mb-8 flex items-center gap-2 p-3 rounded-md bg-emerald-100 text-emerald-800 text-sm font-medium dark:bg-emerald-900/30 dark:text-emerald-400">
+            <Trophy className="w-4 h-4" />
+            Negócio ganho{dealSummary.discountPercent ? ` (desconto de ${dealSummary.discountPercent}%)` : ""}
+          </div>
+        )}
 
         {/* Fake Timeline for visual context */}
         <div>

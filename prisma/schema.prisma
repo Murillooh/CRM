@@ -21,10 +21,13 @@ model User {
   createdAt     DateTime  @default(now()) @map("created_at")
   updatedAt     DateTime  @updatedAt @map("updated_at")
 
+  emailSignature String?  @db.Text @map("email_signature") // Assinatura usada no compose de e-mail (Módulo 5/Email Sync)
+
   memberships   Membership[]
   sessions      Session[]
   accounts      Account[]
   activities    Activity[]
+  emailAccounts EmailAccount[]
 
   @@map("users")
 }
@@ -93,6 +96,7 @@ model Workspace {
   notes         Note[]
   tags          Tag[]
   workflows     Workflow[]
+  emailAccounts EmailAccount[]
 
   @@map("workspaces")
 }
@@ -108,7 +112,8 @@ enum Role {
 model Membership {
   id          String    @id @default(cuid())
   role        Role      @default(VIEWER)
-  
+  region      String?   // Território do rep, usado pelo roteamento de leads (Módulo 8)
+
   userId      String    @map("user_id")
   workspaceId String    @map("workspace_id")
 
@@ -127,11 +132,14 @@ model Membership {
 // -----------------------------------------------------------------------------
 
 model Company {
-  id          String    @id @default(cuid())
-  name        String
-  domain      String?
-  industry    String?
-  
+  id            String    @id @default(cuid())
+  name          String
+  domain        String?
+  industry      String?
+  employeeCount Int?      @map("employee_count") // Porte, usado pelo roteamento de leads (Módulo 8)
+  region        String?   // Território, usado pelo roteamento de leads (Módulo 8)
+  ownerId       String?   @map("owner_id") // ID do User responsável (mesmo padrão de Deal.ownerId)
+
   workspaceId String    @map("workspace_id")
   
   createdAt   DateTime  @default(now()) @map("created_at")
@@ -156,7 +164,8 @@ model Contact {
   email       String?
   phone       String?
   jobTitle    String?   @map("job_title")
-  
+  ownerId     String?   @map("owner_id") // ID do User responsável (mesmo padrão de Deal.ownerId)
+
   workspaceId String    @map("workspace_id")
   companyId   String?   @map("company_id")
 
@@ -171,6 +180,7 @@ model Contact {
   activities  Activity[]
   notes       Note[]
   tags        Tag[]     @relation("ContactTags")
+  workflowEnrollments WorkflowEnrollment[]
 
   @@index([workspaceId, companyId])
   @@index([workspaceId, email])
@@ -223,6 +233,13 @@ enum DealStatus {
   LOST
 }
 
+enum DealApprovalStatus {
+  NONE
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 model Deal {
   id               String     @id @default(cuid())
   title            String
@@ -231,7 +248,12 @@ model Deal {
   status           DealStatus @default(OPEN)
   probability      Int?       @default(0) // 0 to 100
   expectedCloseDate DateTime? @map("expected_close_date")
-  
+  discountPercent  Int?       @map("discount_percent") // Declarado ao marcar como Ganho (Módulo 8: aprovação condicional)
+  approvalStatus   DealApprovalStatus @default(NONE) @map("approval_status")
+  approvedById     String?    @map("approved_by_id")
+  approvedAt       DateTime?  @map("approved_at")
+  closedAt         DateTime?  @map("closed_at") // Carimbado em markDealWon/markDealLost — base do ciclo médio de venda (Relatórios)
+
   workspaceId      String     @map("workspace_id")
   pipelineId       String     @map("pipeline_id")
   stageId          String     @map("stage_id")
@@ -241,6 +263,7 @@ model Deal {
 
   createdAt        DateTime   @default(now()) @map("created_at")
   updatedAt        DateTime   @updatedAt @map("updated_at")
+  stageEnteredAt   DateTime   @default(now()) @map("stage_entered_at") // Carimbado toda vez que stageId muda (Módulo 8: alerta de deal parado)
   deletedAt        DateTime?  @map("deleted_at") // Soft delete
 
   workspace        Workspace  @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
@@ -279,7 +302,8 @@ model Task {
   
   workspaceId String     @map("workspace_id")
   assigneeId  String?    @map("assignee_id") // ID do usuário
-  
+  createdByActionId String? @map("created_by_action_id") // WorkflowAction.id, quando gerada por automação (idempotência)
+
   // Relacionamentos Opcionais
   dealId      String?    @map("deal_id")
   companyId   String?    @map("company_id")
@@ -293,6 +317,7 @@ model Task {
   company     Company?   @relation(fields: [companyId], references: [id], onDelete: Cascade)
   contact     Contact?   @relation(fields: [contactId], references: [id], onDelete: Cascade)
 
+  @@index([createdByActionId, dealId])
   @@index([workspaceId, assigneeId, status])
   @@index([workspaceId, dueDate])
   @@map("tasks")
@@ -312,10 +337,11 @@ model Activity {
   type        ActivityType
   description String?      @db.Text
   metadata    Json?        // Campos dinâmicos (ex: duração de chamada, id de email)
-  
+  externalId  String?      @map("external_id") // ID da mensagem no provedor (Gmail), usado pra dedup do Email Sync
+
   workspaceId String       @map("workspace_id")
   performerId String?      @map("performer_id") // ID do usuário que fez a ação
-  
+
   // Relacionamentos Opcionais
   dealId      String?      @map("deal_id")
   companyId   String?      @map("company_id")
@@ -333,7 +359,54 @@ model Activity {
   @@index([workspaceId, dealId, createdAt(sort: Desc)])
   @@index([workspaceId, contactId, createdAt(sort: Desc)])
   @@index([workspaceId, companyId, createdAt(sort: Desc)])
+  // Dedup do Email Sync: mesma mensagem do provedor nunca vira 2 Activities no mesmo workspace
+  @@unique([workspaceId, externalId])
   @@map("activities")
+}
+
+// -----------------------------------------------------------------------------
+// EMAIL SYNC (Módulo 5 — timeline) — sincronização Gmail via OAuth2
+// -----------------------------------------------------------------------------
+
+enum EmailProvider {
+  GMAIL
+}
+
+enum EmailSyncStatus {
+  CONNECTED
+  ERROR
+  DISCONNECTED
+}
+
+model EmailAccount {
+  id               String          @id @default(cuid())
+  provider         EmailProvider   @default(GMAIL)
+  emailAddress     String
+  status           EmailSyncStatus @default(CONNECTED)
+  lastError        String?         @db.Text
+
+  // Tokens OAuth criptografados em repouso (AES-256-GCM, ver token-crypto.ts). Nunca em texto puro.
+  accessTokenEnc   String          @db.Text @map("access_token_enc")
+  refreshTokenEnc  String          @db.Text @map("refresh_token_enc")
+
+  historyId        String?         @map("history_id") // Cursor de sync incremental do Gmail
+  lastSyncAt       DateTime?       @map("last_sync_at")
+  nextSyncAt       DateTime        @default(now()) @map("next_sync_at") // Scanner de cron só processa quem já venceu
+  backoffUntil     DateTime?       @map("backoff_until") // Backoff por rate limit, isolado por conta
+  backoffAttempts  Int             @default(0) @map("backoff_attempts") // Zera a cada sync com sucesso
+
+  workspaceId      String          @map("workspace_id")
+  connectedById    String          @map("connected_by_id") // User dono da caixa conectada
+
+  createdAt        DateTime        @default(now()) @map("created_at")
+  updatedAt        DateTime        @updatedAt @map("updated_at")
+
+  workspace        Workspace       @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  connectedBy      User            @relation(fields: [connectedById], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, emailAddress])
+  @@index([status, nextSyncAt])
+  @@map("email_accounts")
 }
 
 model Note {
@@ -392,11 +465,48 @@ model Tag {
 enum TriggerType {
   DEAL_STAGE_CHANGED
   SCHEDULE_DAILY
+  CONTACT_CREATED
+  COMPANY_CREATED
+  DEAL_STALLED // Disparado pelo scanner de cron (/api/cron/tick), um evento por deal parado
+  DEAL_WON_ATTEMPTED // Disparado por markDealWon antes de confirmar o status (guarda síncrona)
 }
 
 enum ActionType {
   CREATE_TASK
   NOTIFY_OWNER
+  ASSIGN_OWNER
+  NOTIFY_MANAGER
+  FLAG_DUPLICATE
+  ENROLL_IN_SEQUENCE
+  REQUIRE_APPROVAL
+}
+
+enum EnrollmentStatus {
+  ACTIVE
+  STOPPED
+  COMPLETED
+}
+
+model WorkflowEnrollment {
+  id               String           @id @default(cuid())
+  step             Int              @default(0)
+  status           EnrollmentStatus @default(ACTIVE)
+  nextSendAt       DateTime         @map("next_send_at")
+  enrolledAtStageId String          @map("enrolled_at_stage_id") // Snapshot do estágio no momento do enroll; se o deal sair dali, para a sequência
+
+  workflowId       String           @map("workflow_id")
+  contactId        String           @map("contact_id")
+  dealId           String?          @map("deal_id")
+
+  createdAt        DateTime         @default(now()) @map("created_at")
+  updatedAt        DateTime         @updatedAt @map("updated_at")
+
+  workflow         Workflow         @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  contact          Contact          @relation(fields: [contactId], references: [id], onDelete: Cascade)
+
+  @@index([status, nextSendAt])
+  @@index([workflowId, contactId, status])
+  @@map("workflow_enrollments")
 }
 
 model Workflow {
@@ -405,7 +515,8 @@ model Workflow {
   isActive    Boolean  @default(true)
   triggerType TriggerType
   condition   Json?
-  
+  state       Json?    // Bookkeeping do engine (ex: cursor de round-robin). Não é config de usuário.
+
   workspaceId String   @map("workspace_id")
   
   createdAt   DateTime @default(now()) @map("created_at")
@@ -414,6 +525,7 @@ model Workflow {
   workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   actions     WorkflowAction[]
   logs        WorkflowLog[]
+  enrollments WorkflowEnrollment[]
 
   @@index([workspaceId, triggerType, isActive])
   @@map("workflows")

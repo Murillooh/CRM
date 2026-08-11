@@ -1,34 +1,54 @@
 import { db } from "@/lib/db";
 import { requireWorkspaceAccess } from "@/lib/auth/guard";
 import { ContactDialog } from "./contact-dialog";
-import { Building2, Mail, Phone, MoreHorizontal } from "lucide-react";
+import { ContactRowActions } from "./contact-row-actions";
+import { Building2, Mail, Phone, SearchX } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import Link from "next/link";
 
-export default async function ContactsPage(props: { params: Promise<{ slug: string }> }) {
+export default async function ContactsPage(props: {
+  params: Promise<{ slug: string }>;
+  searchParams: Promise<{ q?: string }>;
+}) {
   const params = await props.params;
+  const searchParams = await props.searchParams;
+  const query = searchParams.q?.trim() || "";
   const { workspace } = await requireWorkspaceAccess(params.slug);
 
-  const contacts = await db.contact.findMany({
-    where: { 
-      workspaceId: workspace.id,
-      deletedAt: null 
-    },
-    include: { company: true },
-    orderBy: { createdAt: 'desc' }
-  });
+  const [contacts, emailAccounts] = await Promise.all([
+    db.contact.findMany({
+      where: {
+        workspaceId: workspace.id,
+        deletedAt: null,
+        ...(query && {
+          OR: [
+            { name: { contains: query, mode: "insensitive" } },
+            { email: { contains: query, mode: "insensitive" } },
+            { company: { name: { contains: query, mode: "insensitive" } } },
+          ],
+        }),
+      },
+      include: { company: true },
+      orderBy: { createdAt: 'desc' }
+    }),
+    db.emailAccount.findMany({
+      where: { workspaceId: workspace.id, status: "CONNECTED" },
+      select: { id: true, emailAddress: true },
+    }),
+  ]);
 
   return (
     <div className="flex h-full flex-col">
       <div className="flex items-center justify-between p-6 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-10">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Contatos</h1>
-          <p className="text-sm text-muted-foreground mt-1">Gerencie sua lista de clientes e contatos.</p>
+          <p className="text-sm text-muted-foreground mt-1">
+            {query ? (
+              <>Resultados para &quot;{query}&quot; &middot; {contacts.length} encontrado{contacts.length === 1 ? "" : "s"}</>
+            ) : (
+              "Gerencie sua lista de clientes e contatos."
+            )}
+          </p>
         </div>
         <ContactDialog workspaceSlug={params.slug} />
       </div>
@@ -48,8 +68,32 @@ export default async function ContactsPage(props: { params: Promise<{ slug: stri
               <tbody className="[&_tr:last-child]:border-0">
                 {contacts.length === 0 ? (
                   <tr>
-                    <td colSpan={4} className="p-8 text-center text-muted-foreground">
-                      Nenhum contato encontrado. Crie um novo!
+                    <td colSpan={4} className="p-0">
+                      {query ? (
+                        <div className="flex flex-col items-center justify-center gap-3 py-12 text-center">
+                          <div className="w-12 h-12 bg-muted rounded-full flex items-center justify-center">
+                            <SearchX className="w-5 h-5 text-muted-foreground" />
+                          </div>
+                          <div>
+                            <p className="font-medium">Nenhum contato para &quot;{query}&quot;</p>
+                            <p className="text-sm text-muted-foreground mt-1">Revise a busca ou limpe o filtro.</p>
+                          </div>
+                          <Button variant="outline" size="sm" asChild>
+                            <Link href={`/workspaces/${params.slug}/contacts`}>Limpar busca</Link>
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col items-center justify-center gap-3 py-12 text-center">
+                          <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
+                            <Building2 className="w-5 h-5 text-primary" />
+                          </div>
+                          <div>
+                            <p className="font-medium">Nenhum contato ainda</p>
+                            <p className="text-sm text-muted-foreground mt-1">Adicione o primeiro contato pra começar a organizar seus clientes.</p>
+                          </div>
+                          <ContactDialog workspaceSlug={params.slug} />
+                        </div>
+                      )}
                     </td>
                   </tr>
                 ) : (
@@ -81,19 +125,7 @@ export default async function ContactsPage(props: { params: Promise<{ slug: stri
                         </div>
                       </td>
                       <td className="p-4 align-middle text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" className="h-8 w-8 p-0">
-                              <span className="sr-only">Abrir menu</span>
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem>Editar</DropdownMenuItem>
-                            {/* Deletar action pode ser feita criando um form ou client component extra, deixaremos no menu por enquanto */}
-                            <DropdownMenuItem className="text-red-600">Remover</DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                        <ContactRowActions workspaceSlug={params.slug} contact={contact} emailAccounts={emailAccounts} />
                       </td>
                     </tr>
                   ))

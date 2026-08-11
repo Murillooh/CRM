@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { 
-  Briefcase, 
-  Users, 
-  Settings, 
-  LayoutDashboard, 
-  Network
+import {
+  Briefcase,
+  Users,
+  Settings,
+  LayoutDashboard,
+  Network,
+  BarChart3
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -19,6 +20,7 @@ export function Sidebar({ workspaceSlug, className }: { workspaceSlug: string, c
     { href: `/workspaces/${workspaceSlug}/deals`, icon: Briefcase, label: "Pipeline" },
     { href: `/workspaces/${workspaceSlug}/contacts`, icon: Users, label: "Contatos" },
     { href: `/workspaces/${workspaceSlug}/automations`, icon: Network, label: "Automações" },
+    { href: `/workspaces/${workspaceSlug}/reports`, icon: BarChart3, label: "Relatórios" },
   ];
 
   return (

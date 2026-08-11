@@ -14,11 +14,18 @@ export default async function AutomationsPage(props: { params: Promise<{ slug: s
   const params = await props.params;
   const { workspace } = await requireWorkspaceAccess(params.slug);
 
-  const workflows = await db.workflow.findMany({
-    where: { workspaceId: workspace.id },
-    include: { actions: true },
-    orderBy: { createdAt: 'desc' }
-  });
+  const [workflows, stages] = await Promise.all([
+    db.workflow.findMany({
+      where: { workspaceId: workspace.id },
+      include: { actions: true },
+      orderBy: { createdAt: 'desc' }
+    }),
+    db.pipelineStage.findMany({
+      where: { workspaceId: workspace.id },
+      orderBy: { order: 'asc' },
+      select: { id: true, name: true },
+    }),
+  ]);
 
   return (
     <div className="flex h-full flex-col">
@@ -27,7 +34,7 @@ export default async function AutomationsPage(props: { params: Promise<{ slug: s
           <h1 className="text-2xl font-bold tracking-tight">Automações</h1>
           <p className="text-sm text-muted-foreground mt-1">Crie regras para automatizar o fluxo de trabalho da sua equipe.</p>
         </div>
-        <AutomationDialog workspaceSlug={params.slug} />
+        <AutomationDialog workspaceSlug={params.slug} stages={stages} />
       </div>
 
       <div className="flex-1 overflow-auto p-6">
@@ -59,8 +66,17 @@ export default async function AutomationsPage(props: { params: Promise<{ slug: s
                       )}
                     </h3>
                     <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
-                      <span className="font-medium text-foreground">Gatilho:</span> 
-                      {workflow.triggerType === "DEAL_STAGE_CHANGED" ? "Mudança de Etapa" : "Horário Agendado"}
+                      <span className="font-medium text-foreground">Gatilho:</span>
+                      {
+                        {
+                          DEAL_STAGE_CHANGED: "Mudança de Etapa",
+                          SCHEDULE_DAILY: "Horário Agendado",
+                          CONTACT_CREATED: "Novo Contato Criado",
+                          COMPANY_CREATED: "Nova Empresa Criada",
+                          DEAL_STALLED: "Negócio Parado",
+                          DEAL_WON_ATTEMPTED: "Negócio Marcado como Ganho",
+                        }[workflow.triggerType as string] ?? workflow.triggerType
+                      }
                       <span className="mx-2 text-border">•</span>
                       <span className="font-medium text-foreground">Ações:</span> 
                       {workflow.actions.length} configurada(s)

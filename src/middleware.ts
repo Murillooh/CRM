@@ -10,7 +10,11 @@ export async function middleware(request: NextRequest) {
   }
 
   // 2. Tenta recuperar o cookie de sessão do Better-Auth
-  const sessionCookie = request.cookies.get('better-auth.session_token')?.value;
+  // Em produção (HTTPS), o better-auth usa cookie seguro com prefixo __Secure- automaticamente;
+  // em dev (HTTP) usa o nome puro. Precisa checar os dois.
+  const sessionCookie =
+    request.cookies.get('better-auth.session_token')?.value ||
+    request.cookies.get('__Secure-better-auth.session_token')?.value;
 
   if (!sessionCookie) {
     return NextResponse.redirect(new URL('/auth/login', request.url));
