@@ -52,42 +52,48 @@ export default async function SettingsPage(props: {
       </div>
 
       <div className="flex-1 overflow-auto p-6 md:p-10 relative z-0">
-        <div className="max-w-5xl mx-auto">
+        <div className="max-w-6xl mx-auto flex flex-col md:flex-row gap-8 lg:gap-12">
           
-          {/* Navegação por Abas (Tabs) */}
-          <div className="flex p-1 bg-muted/40 backdrop-blur-md rounded-xl w-fit mb-10 ring-1 ring-border/50">
-            <Link 
-              href={`?tab=geral`} 
-              className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium transition-all duration-300 ${activeTab === 'geral' ? 'bg-background text-foreground shadow-sm ring-1 ring-border/50' : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'}`}
-            >
-              <LayoutTemplate className="w-4 h-4" />
-              Geral
-            </Link>
-            <Link 
-              href={`?tab=equipe`} 
-              className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium transition-all duration-300 ${activeTab === 'equipe' ? 'bg-background text-foreground shadow-sm ring-1 ring-border/50' : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'}`}
-            >
-              <Users className="w-4 h-4" />
-              Equipe
-            </Link>
-            <Link 
-              href={`?tab=email`} 
-              className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium transition-all duration-300 ${activeTab === 'email' ? 'bg-background text-foreground shadow-sm ring-1 ring-border/50' : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'}`}
-            >
-              <Mail className="w-4 h-4" />
-              E-mail
-            </Link>
-          </div>
+          {/* Navegação Lateral (Menu Esquerdo) */}
+          <aside className="w-full md:w-64 shrink-0">
+            <nav className="flex flex-col gap-1.5 sticky top-28">
+              <h3 className="px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                Menu
+              </h3>
+              <Link 
+                href={`?tab=geral`} 
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-300 ${activeTab === 'geral' ? 'bg-primary/10 text-primary shadow-sm ring-1 ring-primary/20' : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'}`}
+              >
+                <LayoutTemplate className="w-4 h-4" />
+                Geral
+              </Link>
+              <Link 
+                href={`?tab=equipe`} 
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-300 ${activeTab === 'equipe' ? 'bg-primary/10 text-primary shadow-sm ring-1 ring-primary/20' : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'}`}
+              >
+                <Users className="w-4 h-4" />
+                Equipe
+              </Link>
+              <Link 
+                href={`?tab=email`} 
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-300 ${activeTab === 'email' ? 'bg-primary/10 text-primary shadow-sm ring-1 ring-primary/20' : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'}`}
+              >
+                <Mail className="w-4 h-4" />
+                E-mail
+              </Link>
+            </nav>
+          </aside>
 
-          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+          {/* Conteúdo Principal (Lado Direito) */}
+          <div className="flex-1 animate-in fade-in slide-in-from-right-4 duration-500">
             {/* Sessão Geral */}
             {activeTab === 'geral' && (
-              <div className="grid gap-8 md:grid-cols-[1fr_2fr]">
+              <div className="flex flex-col gap-6">
                 <div>
                   <div className="inline-flex p-2 rounded-lg bg-primary/10 mb-3 ring-1 ring-primary/20">
                     <LayoutTemplate className="w-5 h-5 text-primary" />
                   </div>
-                  <h3 className="text-lg font-semibold text-foreground tracking-tight">Geral</h3>
+                  <h3 className="text-xl font-bold text-foreground tracking-tight">Geral</h3>
                   <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
                     Informações básicas sobre este Workspace, incluindo nome e URL de acesso.
                   </p>
@@ -100,12 +106,12 @@ export default async function SettingsPage(props: {
 
             {/* Sessão de Membros */}
             {activeTab === 'equipe' && (
-              <div className="grid gap-8 md:grid-cols-[1fr_2fr]">
+              <div className="flex flex-col gap-6">
                 <div>
                   <div className="inline-flex p-2 rounded-lg bg-blue-500/10 mb-3 ring-1 ring-blue-500/20">
                     <Users className="w-5 h-5 text-blue-500" />
                   </div>
-                  <h3 className="text-lg font-semibold text-foreground tracking-tight">
+                  <h3 className="text-xl font-bold text-foreground tracking-tight">
                     Membros da Equipe
                   </h3>
                   <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
@@ -153,12 +159,12 @@ export default async function SettingsPage(props: {
 
             {/* Sessão de E-mail (Módulo 5 — Email Sync) */}
             {activeTab === 'email' && (
-              <div className="grid gap-8 md:grid-cols-[1fr_2fr]">
+              <div className="flex flex-col gap-6">
                 <div>
                   <div className="inline-flex p-2 rounded-lg bg-rose-500/10 mb-3 ring-1 ring-rose-500/20">
                     <Mail className="w-5 h-5 text-rose-500" />
                   </div>
-                  <h3 className="text-lg font-semibold text-foreground tracking-tight">
+                  <h3 className="text-xl font-bold text-foreground tracking-tight">
                     Integração de E-mail
                   </h3>
                   <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
