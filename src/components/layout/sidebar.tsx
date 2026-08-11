@@ -8,12 +8,21 @@ import {
   Settings,
   LayoutDashboard,
   Network,
-  BarChart3
+  BarChart3,
+  LogOut
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { authClient } from "@/lib/auth-client";
+import { useRouter } from "next/navigation";
 
 export function Sidebar({ workspaceSlug, className }: { workspaceSlug: string, className?: string }) {
   const pathname = usePathname();
+  const router = useRouter();
+
+  const handleSignOut = async () => {
+    await authClient.signOut();
+    router.push("/auth/login");
+  };
 
   const links = [
     { href: `/workspaces/${workspaceSlug}`, icon: LayoutDashboard, label: "Dashboard", exact: true },
@@ -55,7 +64,7 @@ export function Sidebar({ workspaceSlug, className }: { workspaceSlug: string, c
           );
         })}
       </nav>
-      <div className="p-4 border-t">
+      <div className="p-4 border-t space-y-1">
         <Link 
           href={`/workspaces/${workspaceSlug}/settings`} 
           className={cn(
@@ -66,6 +75,13 @@ export function Sidebar({ workspaceSlug, className }: { workspaceSlug: string, c
           <Settings className="h-4 w-4" />
           Configurações
         </Link>
+        <button 
+          onClick={handleSignOut}
+          className="w-full flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors text-red-600 hover:bg-red-100 hover:text-red-700 dark:hover:bg-red-900/50 dark:text-red-500"
+        >
+          <LogOut className="h-4 w-4" />
+          Sair
+        </button>
       </div>
     </aside>
   );
