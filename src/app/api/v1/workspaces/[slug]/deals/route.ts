@@ -80,9 +80,15 @@ export async function POST(
     const body = await req.json();
     const validatedData = CreateDealSchema.parse(body);
 
+    const formData = new FormData();
+    formData.append("title", validatedData.title);
+    formData.append("stageId", validatedData.stageId);
+    formData.append("pipelineId", validatedData.pipelineId);
+    if (validatedData.value) formData.append("value", validatedData.value.toString());
+
     // A action createDeal já faz a validação de acesso e permissão internamente,
     // garantindo reutilização da nossa camada de domínio.
-    const newDeal = await createDeal(resolvedParams.slug, validatedData);
+    const newDeal = await createDeal(resolvedParams.slug, formData);
 
     return apiResponse(newDeal, 201);
   } catch (error) {
