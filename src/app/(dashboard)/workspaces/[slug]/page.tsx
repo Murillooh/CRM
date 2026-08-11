@@ -132,7 +132,7 @@ export default async function DashboardPage(props: { params: Promise<{ slug: str
                         </p>
                       </div>
                       <div className="ml-auto font-medium">
-                        {formatter.format(deal.value.toNumber())}
+                        {formatter.format(deal.value?.toNumber() || 0)}
                       </div>
                     </div>
                   ))}
