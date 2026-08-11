@@ -51,32 +51,32 @@ export default async function SettingsPage(props: {
         </div>
       </div>
 
-      <div className="flex-1 overflow-auto p-6 md:p-10 relative z-0">
-        <div className="max-w-6xl mx-auto flex flex-col md:flex-row gap-8 lg:gap-12">
+      <div className="flex-1 overflow-auto bg-background/50 relative z-0">
+        <div className="flex flex-col md:flex-row h-full w-full">
           
           {/* Navegação Lateral (Menu Esquerdo) */}
-          <aside className="w-full md:w-64 shrink-0">
-            <nav className="flex flex-col gap-1.5 sticky top-28">
-              <h3 className="px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-                Menu
+          <aside className="w-full md:w-72 shrink-0 border-r border-border/40 bg-card/20 p-6 md:p-8">
+            <nav className="flex flex-col gap-2 sticky top-8">
+              <h3 className="px-4 text-[11px] font-bold text-muted-foreground uppercase tracking-widest mb-3">
+                Configurações
               </h3>
               <Link 
                 href={`?tab=geral`} 
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-300 ${activeTab === 'geral' ? 'bg-primary/10 text-primary shadow-sm ring-1 ring-primary/20' : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'}`}
+                className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300 ${activeTab === 'geral' ? 'bg-primary/10 text-primary shadow-sm ring-1 ring-primary/20' : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'}`}
               >
                 <LayoutTemplate className="w-4 h-4" />
                 Geral
               </Link>
               <Link 
                 href={`?tab=equipe`} 
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-300 ${activeTab === 'equipe' ? 'bg-primary/10 text-primary shadow-sm ring-1 ring-primary/20' : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'}`}
+                className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300 ${activeTab === 'equipe' ? 'bg-primary/10 text-primary shadow-sm ring-1 ring-primary/20' : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'}`}
               >
                 <Users className="w-4 h-4" />
                 Equipe
               </Link>
               <Link 
                 href={`?tab=email`} 
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-300 ${activeTab === 'email' ? 'bg-primary/10 text-primary shadow-sm ring-1 ring-primary/20' : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'}`}
+                className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300 ${activeTab === 'email' ? 'bg-primary/10 text-primary shadow-sm ring-1 ring-primary/20' : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'}`}
               >
                 <Mail className="w-4 h-4" />
                 E-mail
@@ -85,9 +85,10 @@ export default async function SettingsPage(props: {
           </aside>
 
           {/* Conteúdo Principal (Lado Direito) */}
-          <div className="flex-1 animate-in fade-in slide-in-from-right-4 duration-500">
-            {/* Sessão Geral */}
-            {activeTab === 'geral' && (
+          <div className="flex-1 p-6 md:p-12 lg:p-16 animate-in fade-in slide-in-from-right-4 duration-500 overflow-x-hidden">
+            <div className="max-w-4xl">
+              {/* Sessão Geral */}
+              {activeTab === 'geral' && (
               <div className="flex flex-col gap-6">
                 <div>
                   <div className="inline-flex p-2 rounded-lg bg-primary/10 mb-3 ring-1 ring-primary/20">
@@ -187,6 +188,7 @@ export default async function SettingsPage(props: {
                 </div>
               </div>
             )}
+            </div>
           </div>
         </div>
       </div>
