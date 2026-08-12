@@ -5,7 +5,7 @@ import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 import styles from "./login.module.css";
 
-const REVEAL_DURATION_MS = 750;
+const REVEAL_DURATION_MS = 950;
 
 function BrandMark() {
   return (
@@ -245,10 +245,20 @@ export default function LoginPage() {
             } as React.CSSProperties}
           />
           <div className={styles.revealLabel}>
-            <span className={styles.mark}>
-              <BrandMark />
+            <div className={styles.revealLogo}>
+              <span className={styles.revealRing} />
+              <span className={`${styles.revealRing} ${styles.revealRingDelay}`} />
+              <span className={styles.mark}>
+                <BrandMark />
+              </span>
+            </div>
+            <span className={styles.revealBrand}>
+              Nova<em>Lead</em>
             </span>
-            <span>Carregando seu workspace...</span>
+            <span className={styles.revealSub}>Carregando seu workspace...</span>
+            <span className={styles.revealBar}>
+              <i />
+            </span>
           </div>
         </>
       )}
