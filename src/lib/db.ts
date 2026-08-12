@@ -6,7 +6,10 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
-let connectionString = process.env.DATABASE_URL;
+// CRM_DATABASE_URL vem da integração Neon (Vercel Storage), prefixada pra não
+// colidir com o DATABASE_URL antigo do Supabase que ficou nas env vars.
+// Fallback pra DATABASE_URL cobre dev local / quem ainda não migrou.
+let connectionString = process.env.CRM_DATABASE_URL || process.env.DATABASE_URL;
 
 // Suporte para o Prisma Postgres local (que usa prisma+postgres://)
 // O pg-pool não entende esse protocolo, então extraímos a URL real do banco de dados (que roda em outra porta local) a partir da api_key em base64.
