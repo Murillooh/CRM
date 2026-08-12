@@ -1,6 +1,7 @@
 import { ReactNode } from "react";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Topbar } from "@/components/layout/topbar";
+import { CommandPalette } from "@/components/layout/command-palette";
 
 export default async function WorkspaceLayout({
   children,
@@ -19,6 +20,7 @@ export default async function WorkspaceLayout({
           {children}
         </main>
       </div>
+      <CommandPalette workspaceSlug={resolvedParams.slug} />
     </div>
   );
 }

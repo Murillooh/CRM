@@ -62,7 +62,7 @@ export function ContactDialog({ workspaceSlug, contact, open: openProp, onOpenCh
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      {!isEdit && (
+      {!isEdit && openProp === undefined && (
         <DialogTrigger asChild>
           <Button className="gap-2">
             <Plus className="h-4 w-4" />

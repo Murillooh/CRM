@@ -30,6 +30,9 @@ export function Topbar({ workspaceSlug }: { workspaceSlug: string }) {
             aria-label="Buscar contatos"
             className="w-full bg-muted/50 pl-9 border-none focus-visible:ring-1"
           />
+          <kbd className="pointer-events-none absolute right-2 top-1.5 hidden select-none items-center gap-1 rounded border bg-background px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100 sm:flex">
+            <span className="text-xs">⌘</span>K
+          </kbd>
         </form>
       </div>
       <div className="flex items-center gap-4">
