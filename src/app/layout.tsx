@@ -19,6 +19,11 @@ export const metadata: Metadata = {
   description: "Next-gen B2B CRM",
 };
 
+// Banco (Supabase) roda em São Paulo (sa-east-1). Sem isso, as functions
+// rodam na região padrão da Vercel (Washington D.C.) e cada consulta ao
+// banco cruza o continente — é a causa da lentidão ao trocar de aba.
+export const preferredRegion = "gru1";
+
 export default function RootLayout({
   children,
 }: Readonly<{
