@@ -1,7 +1,7 @@
 import { db } from "@/lib/db";
 import { requireWorkspaceAccess } from "@/lib/auth/guard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { DollarSign, Users, Briefcase, Activity } from "lucide-react";
+import { DollarSign, Users, Briefcase, Activity, Mail, Check, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { DashboardCharts } from "@/components/dashboard/dashboard-charts";
@@ -13,9 +13,10 @@ export default async function DashboardPage(props: { params: Promise<{ slug: str
   const startOfThisMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
 
   // Consultas ao banco de dados para montar as métricas
-  const [contactsCount, dealsCount, dealsAggregation, valueThisMonthAgg, recentDeals] = await Promise.all([
+  const [contactsCount, dealsCount, emailAccountsCount, dealsAggregation, valueThisMonthAgg, recentDeals] = await Promise.all([
     db.contact.count({ where: { workspaceId: workspace.id } }),
     db.deal.count({ where: { workspaceId: workspace.id } }),
+    db.emailAccount.count({ where: { workspaceId: workspace.id, status: "CONNECTED" } }),
     db.deal.aggregate({
       where: { workspaceId: workspace.id },
       _sum: { value: true }
@@ -34,6 +35,18 @@ export default async function DashboardPage(props: { params: Promise<{ slug: str
       }
     })
   ]);
+
+  // Onboarding leve (item 11 da auditoria de UX): fica visível até ter pelo menos um
+  // contato E um negócio — dá pra ver o primeiro passo "concluído" enquanto ainda
+  // falta o segundo, em vez de sumir inteiro assim que qualquer um dos dois acontece.
+  // "Conectar e-mail" é sugestão extra, não segura o banner sozinho (time pode nem
+  // usar a integração — não vira nag permanente por causa disso).
+  const isNewWorkspace = contactsCount === 0 || dealsCount === 0;
+  const onboardingSteps = [
+    { label: "Adicione seu primeiro contato", done: contactsCount > 0, href: `/workspaces/${params.slug}/contacts`, icon: Users },
+    { label: "Crie seu primeiro negócio", done: dealsCount > 0, href: `/workspaces/${params.slug}/deals`, icon: Briefcase },
+    { label: "Conecte seu e-mail", done: emailAccountsCount > 0, href: `/workspaces/${params.slug}/settings`, icon: Mail },
+  ];
 
   const totalValue = dealsAggregation._sum.value?.toNumber() || 0;
   const valueAddedThisMonth = valueThisMonthAgg._sum.value?.toNumber() || 0;
@@ -62,6 +75,47 @@ export default async function DashboardPage(props: { params: Promise<{ slug: str
       </div>
 
       <div className="flex-1 overflow-auto p-6 space-y-8">
+
+        {isNewWorkspace && (
+          <Card className="border-primary/30 bg-primary/5 shadow-sm">
+            <CardHeader className="pb-3">
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-primary" />
+                <CardTitle className="text-base">Bem-vindo! Vamos começar</CardTitle>
+              </div>
+              <p className="text-sm text-muted-foreground">Três passos rápidos pra deixar o {workspace.name} pronto pra uso.</p>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-3 sm:grid-cols-3">
+                {onboardingSteps.map((step) => {
+                  const Icon = step.icon;
+                  return (
+                    <Link
+                      key={step.label}
+                      href={step.href}
+                      className={`flex items-center gap-3 rounded-lg border p-3 text-sm transition-colors ${
+                        step.done
+                          ? "border-emerald-200 bg-emerald-50 dark:border-emerald-900 dark:bg-emerald-950/30"
+                          : "border-border bg-background hover:border-primary/40 hover:bg-primary/5"
+                      }`}
+                    >
+                      <span
+                        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${
+                          step.done ? "bg-emerald-500 text-white" : "bg-primary/10 text-primary"
+                        }`}
+                      >
+                        {step.done ? <Check className="h-4 w-4" /> : <Icon className="h-4 w-4" />}
+                      </span>
+                      <span className={step.done ? "text-emerald-700 dark:text-emerald-400 line-through decoration-1" : "font-medium text-foreground"}>
+                        {step.label}
+                      </span>
+                    </Link>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Cards de Métricas */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
