@@ -1,14 +1,8 @@
 import { db } from "@/lib/db";
 import { requireWorkspaceAccess } from "@/lib/auth/guard";
 import { AutomationDialog } from "./automation-dialog";
-import { Network, Zap, Clock, MoreHorizontal, CheckCircle2, Circle } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { AutomationActions } from "./automation-actions";
+import { Network, Zap } from "lucide-react";
 
 export default async function AutomationsPage(props: { params: Promise<{ slug: string }> }) {
   const params = await props.params;
@@ -85,18 +79,12 @@ export default async function AutomationsPage(props: { params: Promise<{ slug: s
                 </div>
                 
                 <div className="flex items-center gap-4">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" className="h-8 w-8 p-0">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem>Editar Automação</DropdownMenuItem>
-                      <DropdownMenuItem>{workflow.isActive ? "Desativar" : "Ativar"}</DropdownMenuItem>
-                      <DropdownMenuItem className="text-red-600">Excluir</DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                  <AutomationActions
+                    workspaceSlug={params.slug}
+                    workflowId={workflow.id}
+                    workflowName={workflow.name}
+                    isActive={workflow.isActive}
+                  />
                 </div>
               </div>
             ))

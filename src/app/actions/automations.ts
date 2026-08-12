@@ -121,3 +121,18 @@ export async function toggleAutomation(workspaceSlug: string, workflowId: string
 
   revalidatePath(`/workspaces/${workspaceSlug}/automations`);
 }
+
+export async function deleteAutomation(workspaceSlug: string, workflowId: string) {
+  const { workspace } = await requireWorkspaceAccess(workspaceSlug);
+
+  // deleteMany (não delete) pra garantir escopo por workspaceId — evita apagar
+  // workflow de outro workspace mesmo se o id vazar/for adivinhado.
+  await db.workflow.deleteMany({
+    where: {
+      id: workflowId,
+      workspaceId: workspace.id,
+    },
+  });
+
+  revalidatePath(`/workspaces/${workspaceSlug}/automations`);
+}
