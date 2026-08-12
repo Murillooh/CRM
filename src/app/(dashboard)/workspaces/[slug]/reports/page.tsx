@@ -81,10 +81,12 @@ export default async function ReportsPage(props: { params: Promise<{ slug: strin
   const funnelBars = funnel.stages.map((stage, i) => {
     const prevCount = i > 0 ? funnel.stages[i - 1].openCount : stage.openCount;
     const dropOff = i > 0 ? computeDropOffRate(prevCount, stage.openCount) : 0;
+    const dropOffPct = Math.round(dropOff * 100);
     return {
       label: stage.stageName,
       value: stage.openCount,
-      annotation: i > 0 ? `-${(dropOff * 100).toFixed(0)}% vs. anterior` : undefined,
+      // "-0%" lido como se ainda tivesse caindo; sem queda real, mostra neutro em vez de sinal de menos.
+      annotation: i > 0 ? (dropOffPct > 0 ? `-${dropOffPct}% vs. anterior` : "Sem queda vs. anterior") : undefined,
     };
   });
   const outcomeMap = Object.fromEntries(funnel.outcomes.map((o) => [o.status, o]));

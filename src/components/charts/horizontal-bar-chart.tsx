@@ -66,6 +66,8 @@ export function HorizontalBarChart({
               <text x={labelColWidth - 10} y={y + barHeight / 2} textAnchor="end" dominantBaseline="middle" fontSize={12} fill="var(--chart-text-secondary)">
                 {d.label}
               </text>
+              {/* Trilho: mostra o "total disponível" atrás da barra, facilita julgar a proporção de cabeça (spec dataviz: contexto de magnitude). */}
+              <path d={roundedEndRectPath(padding.left, y, plotWidth, barHeight, 4)} fill="var(--chart-gridline)" />
               <path
                 d={roundedEndRectPath(padding.left, y, barWidth, barHeight, 4)}
                 fill={color}
@@ -77,7 +79,7 @@ export function HorizontalBarChart({
                 {valueFormatter(d.value)}
               </text>
               {d.annotation && (
-                <text x={labelColWidth - 10} y={y + barHeight / 2 + 13} textAnchor="end" fontSize={10} fill="var(--chart-text-muted)">
+                <text x={labelColWidth - 10} y={y + barHeight / 2 + 13} textAnchor="end" fontSize={10} fill="var(--chart-text-secondary)">
                   {d.annotation}
                 </text>
               )}
