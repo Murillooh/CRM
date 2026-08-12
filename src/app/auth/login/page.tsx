@@ -3,21 +3,7 @@
 import { useState } from "react";
 import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
-import { Fraunces, Manrope } from "next/font/google";
 import styles from "./login.module.css";
-
-const fraunces = Fraunces({
-  subsets: ["latin"],
-  weight: ["500", "600", "700"],
-  style: ["normal", "italic"],
-  variable: "--font-fraunces",
-});
-
-const manrope = Manrope({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
-  variable: "--font-manrope",
-});
 
 function BrandMark() {
   return (
@@ -67,7 +53,13 @@ export default function LoginPage() {
   const isLoading = loading !== null;
 
   return (
-    <div className={`${styles.page} ${fraunces.variable} ${manrope.variable}`}>
+    <div className={styles.page}>
+      <link rel="preconnect" href="https://fonts.googleapis.com" />
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+      <link
+        href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,500;0,600;0,700;1,500&family=Manrope:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet"
+      />
       <div className={styles.grain} />
 
       <div className={styles.screen}>
