@@ -25,29 +25,39 @@ export default function LoginPage() {
     e.preventDefault();
     setNote(null);
     setLoading("login");
-    const { data, error } = await authClient.signIn.email({ email, password });
-    if (data) {
-      router.push("/app");
-    } else {
+    try {
+      const { data, error } = await authClient.signIn.email({ email, password });
+      if (data) {
+        router.push("/app");
+        return;
+      }
       setNote({ text: error?.message || "Erro ao fazer login", isError: true });
+    } catch {
+      setNote({ text: "Não foi possível conectar ao servidor. Tente novamente.", isError: true });
+    } finally {
+      setLoading(null);
     }
-    setLoading(null);
   };
 
   const handleRegister = async () => {
     setNote(null);
     setLoading("register");
-    const { data, error } = await authClient.signUp.email({
-      email,
-      password,
-      name: email.split("@")[0],
-    });
-    if (data) {
-      router.push("/app");
-    } else {
+    try {
+      const { data, error } = await authClient.signUp.email({
+        email,
+        password,
+        name: email.split("@")[0],
+      });
+      if (data) {
+        router.push("/app");
+        return;
+      }
       setNote({ text: error?.message || "Erro ao registrar", isError: true });
+    } catch {
+      setNote({ text: "Não foi possível conectar ao servidor. Tente novamente.", isError: true });
+    } finally {
+      setLoading(null);
     }
-    setLoading(null);
   };
 
   const isLoading = loading !== null;
