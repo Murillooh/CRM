@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 import styles from "./login.module.css";
+
+const REVEAL_DURATION_MS = 750;
 
 function BrandMark() {
   return (
@@ -19,6 +21,8 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [note, setNote] = useState<{ text: string; isError: boolean } | null>(null);
+  const [reveal, setReveal] = useState<{ x: number; y: number; size: number } | null>(null);
+  const submitRef = useRef<HTMLButtonElement>(null);
   const router = useRouter();
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -28,7 +32,14 @@ export default function LoginPage() {
     try {
       const { data, error } = await authClient.signIn.email({ email, password });
       if (data) {
-        router.push("/app");
+        const rect = submitRef.current?.getBoundingClientRect();
+        const x = rect ? rect.left + rect.width / 2 : window.innerWidth / 2;
+        const y = rect ? rect.top + rect.height / 2 : window.innerHeight / 2;
+        const maxX = Math.max(x, window.innerWidth - x);
+        const maxY = Math.max(y, window.innerHeight - y);
+        const size = Math.ceil(Math.hypot(maxX, maxY) * 2.2);
+        setReveal({ x, y, size });
+        setTimeout(() => router.push("/app"), REVEAL_DURATION_MS);
         return;
       }
       setNote({ text: error?.message || "Erro ao fazer login", isError: true });
@@ -39,7 +50,7 @@ export default function LoginPage() {
     }
   };
 
-  const isLoading = loading;
+  const isLoading = loading || reveal !== null;
 
   return (
     <div className={styles.page}>
@@ -206,7 +217,7 @@ export default function LoginPage() {
                 </button>
               </div>
 
-              <button type="submit" className={styles.btnPrimary} disabled={isLoading}>
+              <button ref={submitRef} type="submit" className={styles.btnPrimary} disabled={isLoading}>
                 {isLoading && <span className={styles.spinner} />}
                 <span>{isLoading ? "Entrando..." : "Entrar"}</span>
               </button>
@@ -222,6 +233,25 @@ export default function LoginPage() {
           </div>
         </section>
       </div>
+
+      {reveal && (
+        <>
+          <div
+            className={styles.reveal}
+            style={{
+              "--reveal-x": `${reveal.x}px`,
+              "--reveal-y": `${reveal.y}px`,
+              "--reveal-size": `${reveal.size}px`,
+            } as React.CSSProperties}
+          />
+          <div className={styles.revealLabel}>
+            <span className={styles.mark}>
+              <BrandMark />
+            </span>
+            <span>Carregando seu workspace...</span>
+          </div>
+        </>
+      )}
     </div>
   );
 }
