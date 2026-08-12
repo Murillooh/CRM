@@ -28,6 +28,7 @@ model User {
   accounts      Account[]
   activities    Activity[]
   emailAccounts EmailAccount[]
+  savedViews    SavedView[]
 
   @@map("users")
 }
@@ -97,6 +98,7 @@ model Workspace {
   tags          Tag[]
   workflows     Workflow[]
   emailAccounts EmailAccount[]
+  savedViews    SavedView[]
 
   @@map("workspaces")
 }
@@ -557,4 +559,23 @@ model WorkflowLog {
 
   @@index([workflowId, createdAt(sort: Desc)])
   @@map("workflow_logs")
+}
+
+/// Filtro/view salvo por usuário (item 7 da auditoria de UX). `query` guarda o
+/// mesmo shape dos searchParams da página de destino (ex: { q: "..." } em
+/// Contatos) — fica pessoal por usuário, não compartilhado no workspace.
+model SavedView {
+  id         String   @id @default(cuid())
+  name       String
+  entityType String   @map("entity_type") // "contacts" por enquanto; dá pra estender pra "deals" etc.
+  query      Json
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  userId      String    @map("user_id")
+  workspaceId String    @map("workspace_id")
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId, userId, entityType])
+  @@map("saved_views")
 }

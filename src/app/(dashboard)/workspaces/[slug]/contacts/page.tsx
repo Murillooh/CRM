@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import { requireWorkspaceAccess } from "@/lib/auth/guard";
 import { ContactDialog } from "./contact-dialog";
 import { ContactsTable } from "./contacts-table";
+import { SavedViewsBar } from "./saved-views-bar";
 import { User } from "lucide-react";
 
 export default async function ContactsPage(props: {
@@ -11,9 +12,9 @@ export default async function ContactsPage(props: {
   const params = await props.params;
   const searchParams = await props.searchParams;
   const query = searchParams.q?.trim() || "";
-  const { workspace } = await requireWorkspaceAccess(params.slug);
+  const { user, workspace } = await requireWorkspaceAccess(params.slug);
 
-  const [contacts, emailAccounts, memberships] = await Promise.all([
+  const [contacts, emailAccounts, memberships, savedViews] = await Promise.all([
     db.contact.findMany({
       where: {
         workspaceId: workspace.id,
@@ -37,24 +38,35 @@ export default async function ContactsPage(props: {
       where: { workspaceId: workspace.id },
       include: { user: { select: { id: true, name: true } } },
     }),
+    db.savedView.findMany({
+      where: { workspaceId: workspace.id, userId: user.id, entityType: "contacts" },
+      orderBy: { createdAt: "asc" },
+    }),
   ]);
 
   const members = memberships.map((m) => ({ id: m.user.id, name: m.user.name }));
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex items-center justify-between p-6 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-10">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">Contatos</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            {query ? (
-              <>Resultados para &quot;{query}&quot; &middot; {contacts.length} encontrado{contacts.length === 1 ? "" : "s"}</>
-            ) : (
-              "Gerencie sua lista de clientes e contatos."
-            )}
-          </p>
+      <div className="flex flex-col gap-3 p-6 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-10">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">Contatos</h1>
+            <p className="text-sm text-muted-foreground mt-1">
+              {query ? (
+                <>Resultados para &quot;{query}&quot; &middot; {contacts.length} encontrado{contacts.length === 1 ? "" : "s"}</>
+              ) : (
+                "Gerencie sua lista de clientes e contatos."
+              )}
+            </p>
+          </div>
+          <ContactDialog workspaceSlug={params.slug} />
         </div>
-        <ContactDialog workspaceSlug={params.slug} />
+        <SavedViewsBar
+          workspaceSlug={params.slug}
+          currentQuery={query}
+          views={savedViews.map((v) => ({ id: v.id, name: v.name, query: v.query as { q?: string } }))}
+        />
       </div>
 
       <div className="flex-1 overflow-auto p-6">
