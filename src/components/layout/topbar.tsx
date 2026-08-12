@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Sidebar } from "./sidebar";
-import { UserNav } from "./user-nav";
 import { NotificationsNav } from "./notifications-nav";
 
 export function Topbar({ workspaceSlug }: { workspaceSlug: string }) {
@@ -35,7 +34,6 @@ export function Topbar({ workspaceSlug }: { workspaceSlug: string }) {
       </div>
       <div className="flex items-center gap-4">
         <NotificationsNav />
-        <UserNav workspaceSlug={workspaceSlug} />
       </div>
     </header>
   );

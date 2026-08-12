@@ -14,6 +14,7 @@ import {
 import { cn } from "@/lib/utils";
 import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
+import { UserNav } from "./user-nav";
 
 export function Sidebar({ workspaceSlug, className }: { workspaceSlug: string, className?: string }) {
   const pathname = usePathname();
@@ -65,17 +66,20 @@ export function Sidebar({ workspaceSlug, className }: { workspaceSlug: string, c
         })}
       </nav>
       <div className="p-4 border-t space-y-1">
-        <Link 
-          href={`/workspaces/${workspaceSlug}/settings`} 
-          className={cn(
-            "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-foreground",
-            pathname?.startsWith(`/workspaces/${workspaceSlug}/settings`) ? "bg-accent text-foreground" : "text-muted-foreground"
-          )}
-        >
-          <Settings className="h-4 w-4" />
-          Configurações
-        </Link>
-        <button 
+        <div className="flex items-center gap-2">
+          <Link
+            href={`/workspaces/${workspaceSlug}/settings`}
+            className={cn(
+              "flex-1 flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-foreground",
+              pathname?.startsWith(`/workspaces/${workspaceSlug}/settings`) ? "bg-accent text-foreground" : "text-muted-foreground"
+            )}
+          >
+            <Settings className="h-4 w-4" />
+            Configurações
+          </Link>
+          <UserNav workspaceSlug={workspaceSlug} />
+        </div>
+        <button
           onClick={handleSignOut}
           className="w-full flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors text-red-600 hover:bg-red-100 hover:text-red-700 dark:hover:bg-red-900/50 dark:text-red-500"
         >
