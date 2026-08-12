@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { niceMax, roundedEndRectPath } from "./chart-utils";
+import { niceMax, roundedEndRectPath, formatCompactNumber, formatCompactCurrency } from "./chart-utils";
 
 export interface HorizontalBarDatum {
   label: string;
@@ -14,9 +14,18 @@ interface HorizontalBarChartProps {
   data: HorizontalBarDatum[];
   color?: string;
   barHeight?: number;
-  valueFormatter?: (value: number) => string;
+  /**
+   * Formato do valor exibido na ponta da barra/tooltip. Enum em vez de callback:
+   * funções não atravessam a fronteira Server → Client Component (RSC).
+   */
+  format?: "number" | "currency";
   ariaLabel: string;
 }
+
+const FORMATTERS = {
+  number: formatCompactNumber,
+  currency: formatCompactCurrency,
+} as const;
 
 /**
  * Barras horizontais de série única — funil por estágio, ranking por vendedor.
@@ -27,9 +36,10 @@ export function HorizontalBarChart({
   data,
   color = "var(--chart-series-1)",
   barHeight = 22,
-  valueFormatter = (v) => String(v),
+  format = "number",
   ariaLabel,
 }: HorizontalBarChartProps) {
+  const valueFormatter = FORMATTERS[format];
   const [tooltip, setTooltip] = useState<{ y: number; label: string; value: string } | null>(null);
 
   const width = 640;

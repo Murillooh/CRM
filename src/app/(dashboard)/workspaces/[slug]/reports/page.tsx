@@ -6,7 +6,7 @@ import { BarChart } from "@/components/charts/bar-chart";
 import { HorizontalBarChart } from "@/components/charts/horizontal-bar-chart";
 import { StatTile } from "@/components/charts/stat-tile";
 import { ExportCsvButton } from "@/components/charts/export-csv-button";
-import { formatCompactCurrency, formatCompactNumber } from "@/components/charts/chart-utils";
+import { formatCompactNumber } from "@/components/charts/chart-utils";
 import { Filter, TrendingUp, Trophy, XCircle, Users, Activity, BarChart3 } from "lucide-react";
 
 const currencyFormatter = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
@@ -109,7 +109,7 @@ export default async function ReportsPage(props: { params: Promise<{ slug: strin
             <StatTile label="Perdidos" value={formatCompactNumber(lostCount)} icon={XCircle} />
           </div>
           <div className="rounded-xl border bg-card p-6 shadow-sm">
-            <HorizontalBarChart data={funnelBars} valueFormatter={formatCompactNumber} ariaLabel="Funil de conversão por estágio" />
+            <HorizontalBarChart data={funnelBars} format="number" ariaLabel="Funil de conversão por estágio" />
           </div>
         </section>
 
@@ -134,7 +134,7 @@ export default async function ReportsPage(props: { params: Promise<{ slug: strin
             <BarChart
               data={forecastChartData}
               series={[{ key: "weighted", label: "Forecast ponderado", color: "var(--chart-series-1)" }]}
-              valueFormatter={formatCompactCurrency}
+              format="currency"
               ariaLabel="Forecast de receita ponderado por mês de fechamento esperado"
             />
           </div>
@@ -168,7 +168,7 @@ export default async function ReportsPage(props: { params: Promise<{ slug: strin
           ) : (
             <>
               <div className="rounded-xl border bg-card p-6 shadow-sm">
-                <HorizontalBarChart data={performanceChartData} color="var(--chart-series-3)" valueFormatter={formatCompactCurrency} ariaLabel="Valor ganho por vendedor" />
+                <HorizontalBarChart data={performanceChartData} color="var(--chart-series-3)" format="currency" ariaLabel="Valor ganho por vendedor" />
               </div>
               <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
                 <div className="overflow-x-auto">
@@ -223,7 +223,7 @@ export default async function ReportsPage(props: { params: Promise<{ slug: strin
                 { key: "emails", label: "E-mails", color: "var(--chart-series-2)" },
                 { key: "tasks", label: "Tarefas", color: "var(--chart-series-3)" },
               ]}
-              valueFormatter={formatCompactNumber}
+              format="number"
               ariaLabel="Atividade por semana: ligações, e-mails e tarefas"
             />
           </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { niceMax, roundedTopRectPath } from "./chart-utils";
+import { niceMax, roundedTopRectPath, formatCompactNumber, formatCompactCurrency } from "./chart-utils";
 
 export interface ChartSeries {
   key: string;
@@ -25,16 +25,27 @@ interface BarChartProps {
   data: ChartDataPoint[];
   series: ChartSeries[];
   height?: number;
-  valueFormatter?: (value: number) => string;
+  /**
+   * Formato do valor exibido nos eixos/tooltip. Passar a função de formatação
+   * direto como prop quebra em Server Components (funções não são serializáveis
+   * pelo RSC) — por isso é um enum resolvido aqui dentro, não um callback.
+   */
+  format?: "number" | "currency";
   ariaLabel: string;
 }
+
+const FORMATTERS = {
+  number: formatCompactNumber,
+  currency: formatCompactCurrency,
+} as const;
 
 /**
  * Barras verticais agrupadas — séries temporais (semana, mês). Ver skill dataviz:
  * barra ≤24px, canto arredondado só no topo, gap de 2px entre barras/grupos,
  * gridline hairline, legenda quando ≥2 séries, tooltip por barra no hover.
  */
-export function BarChart({ data, series, height = 220, valueFormatter = (v) => String(v), ariaLabel }: BarChartProps) {
+export function BarChart({ data, series, height = 220, format = "number", ariaLabel }: BarChartProps) {
+  const valueFormatter = FORMATTERS[format];
   const [tooltip, setTooltip] = useState<TooltipState | null>(null);
 
   const width = 640;
