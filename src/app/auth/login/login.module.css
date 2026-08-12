@@ -33,7 +33,7 @@
   margin-left: calc(var(--reveal-size) / -2);
   margin-top: calc(var(--reveal-size) / -2);
   border-radius: 50%;
-  background: radial-gradient(circle at 50% 50%, var(--accent-light), var(--accent) 45%, var(--accent-dark) 100%);
+  background: radial-gradient(circle at 50% 50%, #17122a, var(--ink-side) 55%, var(--ink) 100%);
   transform: scale(0);
   transform-origin: center;
   animation: revealPop 0.75s cubic-bezier(0.65, 0, 0.35, 1) forwards;
