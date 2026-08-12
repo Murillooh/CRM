@@ -79,7 +79,7 @@ export function ContactsTable({
     <div className="space-y-3">
       {/* Barra de ações em lote — só aparece com seleção ativa (item 2 da auditoria de UX). */}
       {selected.size > 0 && (
-        <div className="sticky top-0 z-20 flex flex-wrap items-center gap-3 rounded-xl border border-primary/30 bg-primary/5 px-4 py-2.5 shadow-sm backdrop-blur-xl">
+        <div className="sticky top-0 z-20 flex flex-wrap items-center gap-3 rounded-xl border border-primary/30 bg-primary/5 px-4 py-2.5 shadow-sm">
           <span className="text-sm font-medium text-foreground">
             {selected.size} selecionado{selected.size === 1 ? "" : "s"}
           </span>
@@ -115,7 +115,7 @@ export function ContactsTable({
         </div>
       )}
 
-      <div className="rounded-xl border border-border/40 bg-card/60 backdrop-blur-xl shadow-xl shadow-black/5 overflow-hidden">
+      <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
         <div className="relative w-full overflow-auto">
           <table className="w-full caption-bottom text-sm">
             <thead className="[&_tr]:border-b border-border/40 bg-muted/30">

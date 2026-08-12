@@ -45,7 +45,7 @@ export function DashboardCharts({ recentDeals }: ChartDataProps) {
 
   return (
     <div className="grid gap-6 md:grid-cols-2">
-      <Card className="col-span-1 shadow-lg shadow-black/5 ring-1 ring-border/50 border-border/40 bg-card/60 backdrop-blur-xl">
+      <Card className="col-span-1 shadow-sm">
         <CardHeader>
           <CardTitle>Crescimento de Receita</CardTitle>
           <CardDescription>Receita gerada nos últimos 6 meses</CardDescription>
@@ -87,7 +87,7 @@ export function DashboardCharts({ recentDeals }: ChartDataProps) {
         </CardContent>
       </Card>
 
-      <Card className="col-span-1 shadow-lg shadow-black/5 ring-1 ring-border/50 border-border/40 bg-card/60 backdrop-blur-xl">
+      <Card className="col-span-1 shadow-sm">
         <CardHeader>
           <CardTitle>Negócios por Etapa</CardTitle>
           <CardDescription>Distribuição atual do funil</CardDescription>

@@ -37,11 +37,8 @@ export default async function SettingsPage(props: {
   const activeTab = searchParams.tab || 'geral';
 
   return (
-    <div className="flex h-full flex-col relative overflow-hidden bg-background">
-      {/* Elementos de background decorativos (Glow) */}
-      <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[100px] -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
-      
-      <div className="p-8 border-b border-border/40 bg-background/60 backdrop-blur-xl sticky top-0 z-10 flex items-center gap-4">
+    <div className="flex h-full flex-col">
+      <div className="p-6 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-10 flex items-center gap-4">
         <div className="p-3 bg-primary/10 rounded-xl ring-1 ring-primary/20">
           <Settings2 className="w-6 h-6 text-primary" />
         </div>
@@ -99,7 +96,7 @@ export default async function SettingsPage(props: {
                     Informações básicas sobre este Workspace, incluindo nome e URL de acesso.
                   </p>
                 </div>
-                <div className="bg-card/40 backdrop-blur-md border border-border/50 rounded-2xl p-6 md:p-8 shadow-xl shadow-black/5 ring-1 ring-white/5 transition-all hover:bg-card/60">
+                <div className="rounded-xl border bg-card p-6 md:p-8 shadow-sm">
                   <SettingsForm workspace={{ name: workspace.name, slug: workspace.slug }} />
                 </div>
               </div>
@@ -120,7 +117,7 @@ export default async function SettingsPage(props: {
                   </p>
                 </div>
                 
-                <div className="bg-card/40 backdrop-blur-md border border-border/50 rounded-2xl overflow-hidden shadow-xl shadow-black/5 ring-1 ring-white/5 transition-all hover:bg-card/60">
+                <div className="rounded-xl border bg-card overflow-hidden shadow-sm">
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm text-left">
                       <thead className="text-xs uppercase bg-muted/30 border-b border-border/50">
@@ -174,11 +171,11 @@ export default async function SettingsPage(props: {
                 </div>
 
                 <div className="space-y-6">
-                  <div className="bg-card/40 backdrop-blur-md border border-border/50 rounded-2xl p-6 md:p-8 shadow-xl shadow-black/5 ring-1 ring-white/5 transition-all hover:bg-card/60">
+                  <div className="rounded-xl border bg-card p-6 md:p-8 shadow-sm">
                     <EmailAccountsSection workspaceSlug={params.slug} accounts={emailAccounts} banner={banner} />
                   </div>
 
-                  <div className="bg-card/40 backdrop-blur-md border border-border/50 rounded-2xl p-6 md:p-8 shadow-xl shadow-black/5 ring-1 ring-white/5 transition-all hover:bg-card/60 relative overflow-hidden">
+                  <div className="rounded-xl border bg-card p-6 md:p-8 shadow-sm relative overflow-hidden">
                     <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-bl-full pointer-events-none" />
                     <h4 className="text-sm font-semibold mb-4 text-foreground tracking-tight">Assinatura de E-mail</h4>
                     <div className="relative z-10">

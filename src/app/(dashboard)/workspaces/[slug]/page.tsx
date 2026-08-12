@@ -53,30 +53,26 @@ export default async function DashboardPage(props: { params: Promise<{ slug: str
   });
 
   return (
-    <div className="flex h-full flex-col bg-background/50 relative overflow-hidden">
-      {/* Glow effects */}
-      <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-primary/10 rounded-full blur-[120px] pointer-events-none translate-x-1/3 -translate-y-1/3" />
-      
-      <div className="flex items-center justify-between p-6 md:p-8 border-b border-border/40 bg-background/60 backdrop-blur-xl sticky top-0 z-10">
+    <div className="flex h-full flex-col">
+      <div className="flex items-center justify-between p-6 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-10">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">Visão Geral</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Visão Geral</h1>
           <p className="text-sm text-muted-foreground mt-1">Acompanhe as métricas principais do workspace <span className="font-semibold text-foreground">{workspace.name}</span>.</p>
         </div>
       </div>
 
-      <div className="flex-1 overflow-auto p-6 md:p-8 space-y-8 relative z-0">
-        
+      <div className="flex-1 overflow-auto p-6 space-y-8">
+
         {/* Cards de Métricas */}
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-          <Card className="shadow-xl shadow-black/5 ring-1 ring-white/5 border-border/40 bg-card/60 backdrop-blur-xl transition-all hover:-translate-y-1 hover:shadow-primary/5 hover:border-primary/20 group relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative z-10">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <Card className="shadow-sm transition-shadow hover:shadow-md">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Valor Total no Funil</CardTitle>
-              <div className="p-2 bg-emerald-500/10 rounded-lg group-hover:bg-emerald-500/20 transition-colors">
+              <div className="p-2 bg-emerald-500/10 rounded-lg">
                 <DollarSign className="h-4 w-4 text-emerald-500" />
               </div>
             </CardHeader>
-            <CardContent className="relative z-10">
+            <CardContent>
               <div className="text-3xl font-bold text-foreground">
                 {formatter.format(totalValue)}
               </div>
@@ -91,32 +87,30 @@ export default async function DashboardPage(props: { params: Promise<{ slug: str
               )}
             </CardContent>
           </Card>
-          
-          <Card className="shadow-xl shadow-black/5 ring-1 ring-white/5 border-border/40 bg-card/60 backdrop-blur-xl transition-all hover:-translate-y-1 hover:shadow-primary/5 hover:border-primary/20 group relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative z-10">
+
+          <Card className="shadow-sm transition-shadow hover:shadow-md">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Negócios Ativos</CardTitle>
-              <div className="p-2 bg-blue-500/10 rounded-lg group-hover:bg-blue-500/20 transition-colors">
+              <div className="p-2 bg-blue-500/10 rounded-lg">
                 <Briefcase className="h-4 w-4 text-blue-500" />
               </div>
             </CardHeader>
-            <CardContent className="relative z-10">
+            <CardContent>
               <div className="text-3xl font-bold text-foreground">{dealsCount}</div>
               <p className="text-xs text-muted-foreground mt-2">
                 Oportunidades mapeadas
               </p>
             </CardContent>
           </Card>
-          
-          <Card className="shadow-xl shadow-black/5 ring-1 ring-white/5 border-border/40 bg-card/60 backdrop-blur-xl transition-all hover:-translate-y-1 hover:shadow-primary/5 hover:border-primary/20 group relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-amber-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative z-10">
+
+          <Card className="shadow-sm transition-shadow hover:shadow-md">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total de Contatos</CardTitle>
-              <div className="p-2 bg-amber-500/10 rounded-lg group-hover:bg-amber-500/20 transition-colors">
+              <div className="p-2 bg-amber-500/10 rounded-lg">
                 <Users className="h-4 w-4 text-amber-500" />
               </div>
             </CardHeader>
-            <CardContent className="relative z-10">
+            <CardContent>
               <div className="text-3xl font-bold text-foreground">{contactsCount}</div>
               <p className="text-xs text-muted-foreground mt-2">
                 Clientes em potencial
@@ -124,15 +118,14 @@ export default async function DashboardPage(props: { params: Promise<{ slug: str
             </CardContent>
           </Card>
 
-          <Card className="shadow-xl shadow-black/5 ring-1 ring-white/5 border-border/40 bg-card/60 backdrop-blur-xl transition-all hover:-translate-y-1 hover:shadow-primary/5 hover:border-primary/20 group relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative z-10">
+          <Card className="shadow-sm transition-shadow hover:shadow-md">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Atividade Geral</CardTitle>
-              <div className="p-2 bg-primary/10 rounded-lg group-hover:bg-primary/20 transition-colors">
+              <div className="p-2 bg-primary/10 rounded-lg">
                 <Activity className="h-4 w-4 text-primary" />
               </div>
             </CardHeader>
-            <CardContent className="relative z-10">
+            <CardContent>
               <div className="text-3xl font-bold text-primary">Saudável</div>
               <p className="text-xs text-muted-foreground mt-2">
                 Status do pipeline
@@ -141,12 +134,12 @@ export default async function DashboardPage(props: { params: Promise<{ slug: str
           </Card>
         </div>
 
-        {/* Gráficos Interativos (Nova feature) */}
+        {/* Gráficos Interativos */}
         <DashboardCharts recentDeals={serializedRecentDeals} />
 
         {/* Negócios Recentes */}
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
-          <Card className="col-span-4 shadow-xl shadow-black/5 ring-1 ring-border/50 border-border/40 bg-card/60 backdrop-blur-xl">
+          <Card className="col-span-4 shadow-sm">
             <CardHeader>
               <CardTitle>Negócios Recentes</CardTitle>
             </CardHeader>
@@ -188,19 +181,19 @@ export default async function DashboardPage(props: { params: Promise<{ slug: str
             </CardContent>
           </Card>
 
-          <Card className="col-span-3 shadow-xl shadow-black/5 ring-1 ring-border/50 border-border/40 bg-card/60 backdrop-blur-xl bg-gradient-to-br from-card/60 to-primary/5">
+          <Card className="col-span-3 shadow-sm">
             <CardHeader>
               <CardTitle>Próximos Passos</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex flex-col gap-3">
-                <Button variant="outline" className="w-full justify-start h-12 border-primary/20 hover:bg-primary/5 hover:text-primary transition-all" asChild>
+                <Button variant="outline" className="w-full justify-start h-12" asChild>
                   <Link href={`/workspaces/${params.slug}/contacts`}>
                     <Users className="mr-3 h-5 w-5 text-primary/70" />
                     Adicionar novos Contatos
                   </Link>
                 </Button>
-                <Button variant="outline" className="w-full justify-start h-12 border-primary/20 hover:bg-primary/5 hover:text-primary transition-all" asChild>
+                <Button variant="outline" className="w-full justify-start h-12" asChild>
                   <Link href={`/workspaces/${params.slug}/deals`}>
                     <Briefcase className="mr-3 h-5 w-5 text-primary/70" />
                     Gerenciar Funil de Vendas

@@ -42,10 +42,8 @@ export default async function ContactsPage(props: {
   const members = memberships.map((m) => ({ id: m.user.id, name: m.user.name }));
 
   return (
-    <div className="flex h-full flex-col bg-background/50 relative overflow-hidden">
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[100px] pointer-events-none translate-x-1/2 -translate-y-1/2" />
-
-      <div className="flex items-center justify-between p-6 border-b border-border/40 bg-background/60 backdrop-blur-xl sticky top-0 z-10">
+    <div className="flex h-full flex-col">
+      <div className="flex items-center justify-between p-6 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-10">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground">Contatos</h1>
           <p className="text-sm text-muted-foreground mt-1">
@@ -59,9 +57,9 @@ export default async function ContactsPage(props: {
         <ContactDialog workspaceSlug={params.slug} />
       </div>
 
-      <div className="flex-1 overflow-auto p-6 relative z-0">
+      <div className="flex-1 overflow-auto p-6">
         {contacts.length === 0 ? (
-          <div className="rounded-xl border border-border/40 bg-card/60 backdrop-blur-xl shadow-xl shadow-black/5 overflow-hidden">
+          <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
             <div className="flex flex-col items-center justify-center gap-3 py-16 text-center">
               <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center shadow-inner">
                 <User className="w-8 h-8 text-primary" />
