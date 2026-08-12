@@ -1,11 +1,8 @@
 import { db } from "@/lib/db";
 import { requireWorkspaceAccess } from "@/lib/auth/guard";
 import { ContactDialog } from "./contact-dialog";
-import { ContactRowActions } from "./contact-row-actions";
-import { Building2, Mail, Phone, SearchX, User } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
-import { Badge } from "@/components/ui/badge";
+import { ContactsTable } from "./contacts-table";
+import { User } from "lucide-react";
 
 export default async function ContactsPage(props: {
   params: Promise<{ slug: string }>;
@@ -16,7 +13,7 @@ export default async function ContactsPage(props: {
   const query = searchParams.q?.trim() || "";
   const { workspace } = await requireWorkspaceAccess(params.slug);
 
-  const [contacts, emailAccounts] = await Promise.all([
+  const [contacts, emailAccounts, memberships] = await Promise.all([
     db.contact.findMany({
       where: {
         workspaceId: workspace.id,
@@ -36,7 +33,13 @@ export default async function ContactsPage(props: {
       where: { workspaceId: workspace.id, status: "CONNECTED" },
       select: { id: true, emailAddress: true },
     }),
+    db.membership.findMany({
+      where: { workspaceId: workspace.id },
+      include: { user: { select: { id: true, name: true } } },
+    }),
   ]);
+
+  const members = memberships.map((m) => ({ id: m.user.id, name: m.user.name }));
 
   return (
     <div className="flex h-full flex-col bg-background/50 relative overflow-hidden">
@@ -57,105 +60,46 @@ export default async function ContactsPage(props: {
       </div>
 
       <div className="flex-1 overflow-auto p-6 relative z-0">
-        <div className="rounded-xl border border-border/40 bg-card/60 backdrop-blur-xl shadow-xl shadow-black/5 overflow-hidden">
-          <div className="relative w-full overflow-auto">
-            <table className="w-full caption-bottom text-sm">
-              <thead className="[&_tr]:border-b border-border/40 bg-muted/30">
-                <tr className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
-                  <th className="h-12 px-6 text-left align-middle font-semibold text-muted-foreground w-[300px]">Contato</th>
-                  <th className="h-12 px-6 text-left align-middle font-semibold text-muted-foreground">Informações</th>
-                  <th className="h-12 px-6 text-left align-middle font-semibold text-muted-foreground">Cargo / Empresa</th>
-                  <th className="h-12 px-6 align-middle w-[50px]"></th>
-                </tr>
-              </thead>
-              <tbody className="[&_tr:last-child]:border-0">
-                {contacts.length === 0 ? (
-                  <tr>
-                    <td colSpan={4} className="p-0">
-                      {query ? (
-                        <div className="flex flex-col items-center justify-center gap-3 py-16 text-center">
-                          <div className="w-16 h-16 bg-muted/50 rounded-full flex items-center justify-center">
-                            <SearchX className="w-8 h-8 text-muted-foreground" />
-                          </div>
-                          <div>
-                            <p className="text-lg font-medium text-foreground">Nenhum contato para &quot;{query}&quot;</p>
-                            <p className="text-sm text-muted-foreground mt-1">Revise a busca ou limpe o filtro.</p>
-                          </div>
-                          <Button variant="outline" size="sm" className="mt-2" asChild>
-                            <Link href={`/workspaces/${params.slug}/contacts`}>Limpar busca</Link>
-                          </Button>
-                        </div>
-                      ) : (
-                        <div className="flex flex-col items-center justify-center gap-3 py-16 text-center">
-                          <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center shadow-inner">
-                            <User className="w-8 h-8 text-primary" />
-                          </div>
-                          <div>
-                            <p className="text-lg font-medium text-foreground">Nenhum contato ainda</p>
-                            <p className="text-sm text-muted-foreground mt-1">Adicione o primeiro contato pra começar a organizar seus clientes.</p>
-                          </div>
-                          <div className="mt-2">
-                            <ContactDialog workspaceSlug={params.slug} />
-                          </div>
-                        </div>
-                      )}
-                    </td>
-                  </tr>
+        {contacts.length === 0 ? (
+          <div className="rounded-xl border border-border/40 bg-card/60 backdrop-blur-xl shadow-xl shadow-black/5 overflow-hidden">
+            <div className="flex flex-col items-center justify-center gap-3 py-16 text-center">
+              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center shadow-inner">
+                <User className="w-8 h-8 text-primary" />
+              </div>
+              <div>
+                <p className="text-lg font-medium text-foreground">
+                  {query ? `Nenhum contato para "${query}"` : "Nenhum contato ainda"}
+                </p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {query ? "Revise a busca ou limpe o filtro." : "Adicione o primeiro contato pra começar a organizar seus clientes."}
+                </p>
+              </div>
+              <div className="mt-2">
+                {query ? (
+                  <a href={`/workspaces/${params.slug}/contacts`} className="text-sm underline underline-offset-4 text-muted-foreground hover:text-foreground">
+                    Limpar busca
+                  </a>
                 ) : (
-                  contacts.map((contact) => (
-                    <tr key={contact.id} className="group border-b border-border/40 transition-all hover:bg-muted/40 data-[state=selected]:bg-muted">
-                      <td className="px-6 py-4 align-middle">
-                        <div className="flex items-center gap-4">
-                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center text-primary font-bold shadow-inner shrink-0 group-hover:scale-105 transition-transform">
-                            {contact.name.charAt(0).toUpperCase()}
-                          </div>
-                          <div className="font-semibold text-foreground group-hover:text-primary transition-colors">
-                            {contact.name}
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 align-middle">
-                        <div className="flex flex-col gap-2 text-xs">
-                          {contact.email && (
-                            <span className="flex items-center gap-2 text-muted-foreground">
-                              <Mail className="h-3.5 w-3.5" /> 
-                              <a href={`mailto:${contact.email}`} className="hover:text-primary hover:underline">{contact.email}</a>
-                            </span>
-                          )}
-                          {contact.phone && (
-                            <span className="flex items-center gap-2 text-muted-foreground">
-                              <Phone className="h-3.5 w-3.5" /> 
-                              <a href={`tel:${contact.phone}`} className="hover:text-primary hover:underline">{contact.phone}</a>
-                            </span>
-                          )}
-                          {!contact.email && !contact.phone && <span className="text-muted-foreground/50 italic">Sem informações de contato</span>}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 align-middle">
-                        <div className="flex flex-col items-start gap-2 text-xs">
-                          {contact.jobTitle ? (
-                            <span className="font-medium text-muted-foreground">{contact.jobTitle}</span>
-                          ) : null}
-                          {contact.company ? (
-                            <Badge variant="secondary" className="flex items-center gap-1.5 font-medium bg-muted/50 border-border/50 text-foreground">
-                              <Building2 className="h-3 w-3 text-primary/70" /> {contact.company.name}
-                            </Badge>
-                          ) : null}
-                          {!contact.jobTitle && !contact.company && <span className="text-muted-foreground/50">-</span>}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 align-middle text-right">
-                        <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                          <ContactRowActions workspaceSlug={params.slug} contact={contact} emailAccounts={emailAccounts} />
-                        </div>
-                      </td>
-                    </tr>
-                  ))
+                  <ContactDialog workspaceSlug={params.slug} />
                 )}
-              </tbody>
-            </table>
+              </div>
+            </div>
           </div>
-        </div>
+        ) : (
+          <ContactsTable
+            workspaceSlug={params.slug}
+            contacts={contacts.map((c) => ({
+              id: c.id,
+              name: c.name,
+              email: c.email,
+              phone: c.phone,
+              jobTitle: c.jobTitle,
+              company: c.company ? { name: c.company.name } : null,
+            }))}
+            emailAccounts={emailAccounts}
+            members={members}
+          />
+        )}
       </div>
     </div>
   );

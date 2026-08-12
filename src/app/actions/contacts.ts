@@ -92,13 +92,39 @@ export async function deleteContact(workspaceSlug: string, contactId: string) {
   // Soft delete ou delete direto. No schema tem deletedAt, então vamos usar hard delete para simplificar
   // ou soft delete se preferir. O schema permite soft delete `deletedAt: DateTime?`
   await db.contact.updateMany({
-    where: { 
+    where: {
       id: contactId,
-      workspaceId: workspace.id 
+      workspaceId: workspace.id
     },
     data: {
       deletedAt: new Date()
     }
+  });
+
+  revalidatePath(`/workspaces/${workspaceSlug}/contacts`);
+}
+
+/** Exclusão em massa (soft delete) — item 2 da auditoria de UX: ações em lote na tabela de Contatos. */
+export async function bulkDeleteContacts(workspaceSlug: string, contactIds: string[]) {
+  const { workspace } = await requireWorkspaceAccess(workspaceSlug);
+  if (contactIds.length === 0) return;
+
+  await db.contact.updateMany({
+    where: { id: { in: contactIds }, workspaceId: workspace.id },
+    data: { deletedAt: new Date() },
+  });
+
+  revalidatePath(`/workspaces/${workspaceSlug}/contacts`);
+}
+
+/** Atribuição em massa de responsável — mesmo item da auditoria. `ownerId: null` limpa o responsável. */
+export async function bulkAssignContacts(workspaceSlug: string, contactIds: string[], ownerId: string | null) {
+  const { workspace } = await requireWorkspaceAccess(workspaceSlug);
+  if (contactIds.length === 0) return;
+
+  await db.contact.updateMany({
+    where: { id: { in: contactIds }, workspaceId: workspace.id },
+    data: { ownerId },
   });
 
   revalidatePath(`/workspaces/${workspaceSlug}/contacts`);
