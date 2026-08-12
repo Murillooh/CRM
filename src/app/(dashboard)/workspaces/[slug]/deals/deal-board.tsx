@@ -3,10 +3,10 @@
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
-import { GripVertical, Building2, User, Clock, Briefcase } from "lucide-react";
+import { GripVertical, Building2, User, Clock, Briefcase, Pencil } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { moveDealStage } from "@/app/actions/deals";
+import { moveDealStage, updateDealTitle } from "@/app/actions/deals";
 
 type BoardDeal = {
   id: string;
@@ -29,6 +29,20 @@ export function DealBoard({ workspaceSlug, stages }: { workspaceSlug: string; st
   const [dragOverStageId, setDragOverStageId] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [editingDealId, setEditingDealId] = useState<string | null>(null);
+
+  function handleTitleSave(dealId: string, currentTitle: string, nextTitle: string) {
+    setEditingDealId(null);
+    const trimmed = nextTitle.trim();
+    if (!trimmed || trimmed === currentTitle) return;
+    startTransition(async () => {
+      try {
+        await updateDealTitle(workspaceSlug, dealId, trimmed);
+      } catch (err: any) {
+        setError(err?.message || "Erro ao renomear negócio.");
+      }
+    });
+  }
 
   function handleDrop(stageId: string, e: React.DragEvent) {
     e.preventDefault();
@@ -95,7 +109,10 @@ export function DealBoard({ workspaceSlug, stages }: { workspaceSlug: string; st
                   <Link
                     href={`?dealId=${deal.id}`}
                     key={deal.id}
-                    draggable
+                    draggable={editingDealId !== deal.id}
+                    onClick={(e) => {
+                      if (editingDealId === deal.id) e.preventDefault();
+                    }}
                     onDragStart={(e) => {
                       e.dataTransfer.setData("text/deal-id", deal.id);
                       e.dataTransfer.setData("text/from-stage-id", stage.id);
@@ -107,10 +124,41 @@ export function DealBoard({ workspaceSlug, stages }: { workspaceSlug: string; st
                   >
                     <GripVertical className="absolute right-2 top-2 h-4 w-4 text-muted-foreground/0 group-hover:text-muted-foreground/40 transition-colors hidden md:block" />
 
-                      <div className="flex justify-between items-start mb-3">
-                        <h4 className="font-semibold text-sm text-foreground leading-tight pr-6 line-clamp-2">
-                          {deal.title}
-                        </h4>
+                      <div className="flex justify-between items-start mb-3 gap-1">
+                        {editingDealId === deal.id ? (
+                          <input
+                            autoFocus
+                            type="text"
+                            defaultValue={deal.title}
+                            aria-label="Título do negócio"
+                            onClick={(e) => e.preventDefault()}
+                            onMouseDown={(e) => e.stopPropagation()}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") e.currentTarget.blur();
+                              if (e.key === "Escape") setEditingDealId(null);
+                            }}
+                            onBlur={(e) => handleTitleSave(deal.id, deal.title, e.currentTarget.value)}
+                            className="flex-1 min-w-0 font-semibold text-sm bg-background border border-primary rounded px-1.5 py-0.5 outline-none mr-4"
+                          />
+                        ) : (
+                          <>
+                            <h4 className="font-semibold text-sm text-foreground leading-tight line-clamp-2">
+                              {deal.title}
+                            </h4>
+                            <button
+                              type="button"
+                              aria-label="Editar título"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                setEditingDealId(deal.id);
+                              }}
+                              className="shrink-0 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity text-muted-foreground hover:text-foreground"
+                            >
+                              <Pencil className="h-3.5 w-3.5" />
+                            </button>
+                          </>
+                        )}
                       </div>
 
                       <div className="flex items-center gap-2 text-xs text-muted-foreground mb-4">

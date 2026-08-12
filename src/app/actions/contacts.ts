@@ -104,6 +104,18 @@ export async function deleteContact(workspaceSlug: string, contactId: string) {
   revalidatePath(`/workspaces/${workspaceSlug}/contacts`);
 }
 
+/** Edição inline de um campo isolado (email/telefone) — item 6 da auditoria de UX. Não exige o dialog inteiro. */
+export async function updateContactField(workspaceSlug: string, contactId: string, field: "email" | "phone", value: string) {
+  const { workspace } = await requireWorkspaceAccess(workspaceSlug);
+
+  await db.contact.updateMany({
+    where: { id: contactId, workspaceId: workspace.id },
+    data: { [field]: value.trim() || null },
+  });
+
+  revalidatePath(`/workspaces/${workspaceSlug}/contacts`);
+}
+
 /** Exclusão em massa (soft delete) — item 2 da auditoria de UX: ações em lote na tabela de Contatos. */
 export async function bulkDeleteContacts(workspaceSlug: string, contactIds: string[]) {
   const { workspace } = await requireWorkspaceAccess(workspaceSlug);

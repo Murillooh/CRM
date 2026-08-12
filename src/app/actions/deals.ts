@@ -60,6 +60,32 @@ export async function createDeal(workspaceSlug: string, formData: FormData) {
  * Move um Deal pra outra Etapa (drag-and-drop do Kanban). Carimba `stageEnteredAt` e
  * dispara o gatilho DEAL_STAGE_CHANGED do WorkflowEngine (Módulo 8).
  */
+/** Edição inline do título direto no card do Kanban — item 6 da auditoria de UX. */
+export async function updateDealTitle(workspaceSlug: string, dealId: string, title: string) {
+  const { user, workspace, role } = await requireWorkspaceAccess(workspaceSlug);
+  requirePermission(role, "update", "Deal");
+
+  const trimmed = title.trim();
+  if (!trimmed) {
+    throw new Error("Título não pode ficar vazio.");
+  }
+
+  const deal = await db.deal.findFirst({ where: { id: dealId, workspaceId: workspace.id } });
+  if (!deal) {
+    throw new Error("Negócio não encontrado.");
+  }
+  if (role === "SALES_REP" && deal.ownerId !== user.id) {
+    throw new AuthorizationError("Você só pode editar negócios dos quais é responsável.");
+  }
+
+  await db.deal.update({
+    where: { id: dealId },
+    data: { title: trimmed },
+  });
+
+  revalidatePath(`/workspaces/${workspaceSlug}/deals`);
+}
+
 export async function moveDealStage(workspaceSlug: string, dealId: string, newStageId: string) {
   const { user, workspace, role } = await requireWorkspaceAccess(workspaceSlug);
   requirePermission(role, "update", "Deal");

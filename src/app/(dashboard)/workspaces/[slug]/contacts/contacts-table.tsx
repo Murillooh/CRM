@@ -1,12 +1,12 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
-import { Building2, Mail, Phone, Trash2, UserCog, X, Loader2 } from "lucide-react";
+import { Building2, Mail, Phone, Trash2, UserCog, X, Loader2, Pencil } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { ContactRowActions } from "./contact-row-actions";
-import { bulkAssignContacts, bulkDeleteContacts } from "@/app/actions/contacts";
+import { bulkAssignContacts, bulkDeleteContacts, updateContactField } from "@/app/actions/contacts";
 
 type Contact = {
   id: string;
@@ -19,6 +19,68 @@ type Contact = {
 
 const selectClass =
   "h-8 rounded-md border border-input bg-background px-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2";
+
+/**
+ * Campo editável inline (item 6 da auditoria de UX) — email/telefone da linha
+ * de Contatos. Mostra o valor como link (mailto/tel) com lápis no hover/foco;
+ * clicar o lápis vira um input; Enter/blur salva, Escape cancela.
+ */
+function InlineContactField({
+  value,
+  placeholder,
+  type,
+  hrefPrefix,
+  ariaLabel,
+  onSave,
+}: {
+  value: string | null;
+  placeholder: string;
+  type: "email" | "tel";
+  hrefPrefix: string;
+  ariaLabel: string;
+  onSave: (value: string) => void;
+}) {
+  const [editing, setEditing] = useState(false);
+
+  if (editing) {
+    return (
+      <input
+        autoFocus
+        type={type}
+        defaultValue={value ?? ""}
+        aria-label={ariaLabel}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") e.currentTarget.blur();
+          if (e.key === "Escape") setEditing(false);
+        }}
+        onBlur={(e) => {
+          setEditing(false);
+          const next = e.target.value.trim();
+          if (next !== (value ?? "")) onSave(next);
+        }}
+        className="w-full rounded border border-primary bg-background px-1.5 py-0.5 text-xs outline-none"
+      />
+    );
+  }
+
+  return (
+    <span className="group/field flex items-center gap-1">
+      {value ? (
+        <a href={`${hrefPrefix}${value}`} className="hover:text-primary hover:underline">{value}</a>
+      ) : (
+        <span className="text-muted-foreground/50 italic">{placeholder}</span>
+      )}
+      <button
+        type="button"
+        aria-label={ariaLabel}
+        onClick={() => setEditing(true)}
+        className="opacity-0 group-hover/field:opacity-100 group-focus-within/field:opacity-100 transition-opacity text-muted-foreground hover:text-foreground"
+      >
+        <Pencil className="h-3 w-3" />
+      </button>
+    </span>
+  );
+}
 
 export function ContactsTable({
   workspaceSlug,
@@ -161,19 +223,28 @@ export function ContactsTable({
                     </td>
                     <td className="px-6 py-4 align-middle">
                       <div className="flex flex-col gap-2 text-xs">
-                        {contact.email && (
-                          <span className="flex items-center gap-2 text-muted-foreground">
-                            <Mail className="h-3.5 w-3.5" />
-                            <a href={`mailto:${contact.email}`} className="hover:text-primary hover:underline">{contact.email}</a>
-                          </span>
-                        )}
-                        {contact.phone && (
-                          <span className="flex items-center gap-2 text-muted-foreground">
-                            <Phone className="h-3.5 w-3.5" />
-                            <a href={`tel:${contact.phone}`} className="hover:text-primary hover:underline">{contact.phone}</a>
-                          </span>
-                        )}
-                        {!contact.email && !contact.phone && <span className="text-muted-foreground/50 italic">Sem informações de contato</span>}
+                        <span className="flex items-center gap-2 text-muted-foreground">
+                          <Mail className="h-3.5 w-3.5 shrink-0" />
+                          <InlineContactField
+                            value={contact.email}
+                            placeholder="Sem e-mail"
+                            type="email"
+                            hrefPrefix="mailto:"
+                            ariaLabel={`E-mail de ${contact.name}`}
+                            onSave={(v) => startTransition(() => updateContactField(workspaceSlug, contact.id, "email", v))}
+                          />
+                        </span>
+                        <span className="flex items-center gap-2 text-muted-foreground">
+                          <Phone className="h-3.5 w-3.5 shrink-0" />
+                          <InlineContactField
+                            value={contact.phone}
+                            placeholder="Sem telefone"
+                            type="tel"
+                            hrefPrefix="tel:"
+                            ariaLabel={`Telefone de ${contact.name}`}
+                            onSave={(v) => startTransition(() => updateContactField(workspaceSlug, contact.id, "phone", v))}
+                          />
+                        </span>
                       </div>
                     </td>
                     <td className="px-6 py-4 align-middle">
