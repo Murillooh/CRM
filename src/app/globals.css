@@ -1,6 +1,14 @@
 @import "tailwindcss";
 @plugin "tailwindcss-animate";
-@custom-variant dark (&:is(.dark *));
+/*
+ * Sem toggle de tema na UI (ver theme-provider.tsx) — dark mode só segue o SO.
+ * Por isso é @media, não classe: classe precisa de JS pra alternar antes do
+ * primeiro paint (script anti-flash, que disparava o warning "Encountered a
+ * script tag..." do React/Next 16). @media aplica no CSS puro, sem flash,
+ * sem script. Quando alguém adicionar um toggle manual, troca pra
+ * `@custom-variant dark (&:is(.dark *));` + classe no <html> lida via cookie
+ * no server (RootLayout já é Server Component, dá pra ler direto).
+ */
 
 @theme {
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
@@ -75,38 +83,40 @@
     --chart-status-good: #0ca30c;
     --chart-status-critical: #d03b3b;
   }
-  .dark {
-    --chart-surface: #1a1a19;
-    --chart-text-primary: #ffffff;
-    --chart-text-secondary: #c3c2b7;
-    --chart-text-muted: #898781;
-    --chart-gridline: #2c2c2a;
-    --chart-baseline: #383835;
-    --chart-series-1: #3987e5;
-    --chart-series-2: #d95926;
-    --chart-series-3: #199e70;
-    --chart-series-4: #c98500;
-    --chart-status-good: #0ca30c;
-    --chart-status-critical: #e66767;
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 240 10% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 240 10% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 240 5.9% 10%;
-    --secondary: 240 3.7% 15.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
-    --accent: 240 3.7% 15.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 240 4.9% 83.9%;
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --chart-surface: #1a1a19;
+      --chart-text-primary: #ffffff;
+      --chart-text-secondary: #c3c2b7;
+      --chart-text-muted: #898781;
+      --chart-gridline: #2c2c2a;
+      --chart-baseline: #383835;
+      --chart-series-1: #3987e5;
+      --chart-series-2: #d95926;
+      --chart-series-3: #199e70;
+      --chart-series-4: #c98500;
+      --chart-status-good: #0ca30c;
+      --chart-status-critical: #e66767;
+      --background: 240 10% 3.9%;
+      --foreground: 0 0% 98%;
+      --card: 240 10% 3.9%;
+      --card-foreground: 0 0% 98%;
+      --popover: 240 10% 3.9%;
+      --popover-foreground: 0 0% 98%;
+      --primary: 0 0% 98%;
+      --primary-foreground: 240 5.9% 10%;
+      --secondary: 240 3.7% 15.9%;
+      --secondary-foreground: 0 0% 98%;
+      --muted: 240 3.7% 15.9%;
+      --muted-foreground: 240 5% 64.9%;
+      --accent: 240 3.7% 15.9%;
+      --accent-foreground: 0 0% 98%;
+      --destructive: 0 62.8% 30.6%;
+      --destructive-foreground: 0 0% 98%;
+      --border: 240 3.7% 15.9%;
+      --input: 240 3.7% 15.9%;
+      --ring: 240 4.9% 83.9%;
+    }
   }
 }
 
