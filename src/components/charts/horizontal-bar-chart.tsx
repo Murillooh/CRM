@@ -63,7 +63,7 @@ export function HorizontalBarChart({
           const barWidth = maxValue > 0 ? (d.value / maxValue) * plotWidth : 0;
           return (
             <g key={d.label}>
-              <text x={labelColWidth - 10} y={y + barHeight / 2} textAnchor="end" dominantBaseline="middle" fontSize={12} fill="var(--chart-text-secondary)">
+              <text x={labelColWidth - 10} y={y + barHeight / 2} textAnchor="end" dominantBaseline="middle" fontSize={12} fontWeight={600} fill="var(--chart-text-primary)">
                 {d.label}
               </text>
               {/* Trilho: mostra o "total disponível" atrás da barra, facilita julgar a proporção de cabeça (spec dataviz: contexto de magnitude). */}
@@ -79,7 +79,7 @@ export function HorizontalBarChart({
                 {valueFormatter(d.value)}
               </text>
               {d.annotation && (
-                <text x={labelColWidth - 10} y={y + barHeight / 2 + 13} textAnchor="end" fontSize={10} fill="var(--chart-text-secondary)">
+                <text x={labelColWidth - 10} y={y + barHeight / 2 + 14} textAnchor="end" fontSize={11} fill="var(--chart-text-secondary)">
                   {d.annotation}
                 </text>
               )}

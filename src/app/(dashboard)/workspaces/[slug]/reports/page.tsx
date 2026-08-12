@@ -86,7 +86,9 @@ export default async function ReportsPage(props: { params: Promise<{ slug: strin
       label: stage.stageName,
       value: stage.openCount,
       // "-0%" lido como se ainda tivesse caindo; sem queda real, mostra neutro em vez de sinal de menos.
-      annotation: i > 0 ? (dropOffPct > 0 ? `-${dropOffPct}% vs. anterior` : "Sem queda vs. anterior") : undefined,
+      // Primeiro estágio sempre leva uma anotação também — mantém o ritmo de 2 linhas por linha do funil.
+      annotation:
+        i > 0 ? (dropOffPct > 0 ? `-${dropOffPct}% vs. anterior` : "Sem queda vs. anterior") : "Topo do funil",
     };
   });
   const outcomeMap = Object.fromEntries(funnel.outcomes.map((o) => [o.status, o]));
