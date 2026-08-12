@@ -190,7 +190,8 @@ export function ContactsTable({
                       </div>
                     </td>
                     <td className="px-6 py-4 align-middle text-right">
-                      <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                      {/* focus-within além de hover: menu de ações não pode existir só pra quem usa mouse (item 4 da auditoria de UX). */}
+                      <div className="opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity">
                         <ContactRowActions workspaceSlug={workspaceSlug} contact={contact} emailAccounts={emailAccounts} />
                       </div>
                     </td>
