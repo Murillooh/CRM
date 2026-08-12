@@ -7,6 +7,30 @@ import { revalidatePath } from "next/cache";
 import { WorkflowEngine } from "@/lib/services/workflow-engine";
 import { needsDiscountApproval } from "@/lib/services/deal-approval";
 
+/** Provisiona o mesmo pipeline padrão do onboarding (src/app/app/page.tsx) — usado
+ *  como fallback quando um workspace acaba sem nenhum pipeline (edge case; hoje
+ *  todo workspace novo já ganha um automaticamente na criação). */
+export async function createDefaultPipeline(workspaceSlug: string) {
+  const { workspace } = await requireWorkspaceAccess(workspaceSlug);
+
+  await db.pipeline.create({
+    data: {
+      name: "Vendas",
+      workspaceId: workspace.id,
+      stages: {
+        create: [
+          { name: "Lead", order: 0, workspaceId: workspace.id },
+          { name: "Contato Feito", order: 1, workspaceId: workspace.id },
+          { name: "Proposta", order: 2, workspaceId: workspace.id },
+          { name: "Negociação", order: 3, workspaceId: workspace.id },
+        ],
+      },
+    },
+  });
+
+  revalidatePath(`/workspaces/${workspaceSlug}/deals`);
+}
+
 export async function createDeal(workspaceSlug: string, formData: FormData) {
   const { workspace } = await requireWorkspaceAccess(workspaceSlug);
 

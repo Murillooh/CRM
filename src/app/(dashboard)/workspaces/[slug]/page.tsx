@@ -10,13 +10,20 @@ export default async function DashboardPage(props: { params: Promise<{ slug: str
   const params = await props.params;
   const { workspace } = await requireWorkspaceAccess(params.slug);
 
+  const startOfThisMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+
   // Consultas ao banco de dados para montar as métricas
-  const [contactsCount, dealsCount, dealsAggregation, recentDeals] = await Promise.all([
+  const [contactsCount, dealsCount, dealsAggregation, valueThisMonthAgg, recentDeals] = await Promise.all([
     db.contact.count({ where: { workspaceId: workspace.id } }),
     db.deal.count({ where: { workspaceId: workspace.id } }),
     db.deal.aggregate({
       where: { workspaceId: workspace.id },
       _sum: { value: true }
+    }),
+    // Base pro "% adicionado este mês" — real, calculado, não fixo (era hardcoded "+12%" antes).
+    db.deal.aggregate({
+      where: { workspaceId: workspace.id, createdAt: { gte: startOfThisMonth } },
+      _sum: { value: true },
     }),
     db.deal.findMany({
       where: { workspaceId: workspace.id },
@@ -29,7 +36,10 @@ export default async function DashboardPage(props: { params: Promise<{ slug: str
   ]);
 
   const totalValue = dealsAggregation._sum.value?.toNumber() || 0;
-  
+  const valueAddedThisMonth = valueThisMonthAgg._sum.value?.toNumber() || 0;
+  const valueBeforeThisMonth = totalValue - valueAddedThisMonth;
+  const growthPct = valueBeforeThisMonth > 0 ? (valueAddedThisMonth / valueBeforeThisMonth) * 100 : null;
+
   // Converter Decimal para Number (Next.js server->client serialization)
   const serializedRecentDeals = recentDeals.map(deal => ({
     ...deal,
@@ -70,9 +80,15 @@ export default async function DashboardPage(props: { params: Promise<{ slug: str
               <div className="text-3xl font-bold text-foreground">
                 {formatter.format(totalValue)}
               </div>
-              <p className="text-xs text-emerald-500 mt-2 font-medium flex items-center gap-1">
-                +12% <span className="text-muted-foreground font-normal">em relação ao último mês</span>
-              </p>
+              {growthPct !== null ? (
+                <p className="text-xs text-emerald-500 mt-2 font-medium flex items-center gap-1">
+                  +{growthPct.toFixed(0)}% <span className="text-muted-foreground font-normal">adicionado este mês</span>
+                </p>
+              ) : (
+                <p className="text-xs text-muted-foreground mt-2">
+                  {valueAddedThisMonth > 0 ? "Todo o valor foi adicionado este mês" : "Nenhum valor no funil ainda"}
+                </p>
+              )}
             </CardContent>
           </Card>
           

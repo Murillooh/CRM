@@ -1,10 +1,10 @@
 import { db } from "@/lib/db";
 import { requireWorkspaceAccess } from "@/lib/auth/guard";
-import { Button } from "@/components/ui/button";
 import { Building2 } from "lucide-react";
 import { DealSheet } from "@/components/pipeline/deal-sheet";
 import { DealDialog } from "./deal-dialog";
 import { DealBoard } from "./deal-board";
+import { CreatePipelineButton } from "./create-pipeline-button";
 
 export default async function DealsPage(props: { 
   params: Promise<{ slug: string }> | { slug: string },
@@ -51,7 +51,7 @@ export default async function DealsPage(props: {
         <p className="text-muted-foreground max-w-sm mb-6">
           Parece que você ainda não configurou seu funil de vendas. Crie seu primeiro pipeline para começar a rastrear negócios.
         </p>
-        <Button>Criar Pipeline</Button>
+        <CreatePipelineButton workspaceSlug={params.slug} />
       </div>
     );
   }
