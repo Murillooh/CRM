@@ -1,10 +1,18 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
-import { Building2, Mail, Phone, Trash2, UserCog, X, Loader2, Pencil } from "lucide-react";
+import { useEffect, useMemo, useState, useTransition } from "react";
+import { Building2, Mail, Phone, Trash2, UserCog, X, Loader2, Pencil, Columns3 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { ContactRowActions } from "./contact-row-actions";
 import { bulkAssignContacts, bulkDeleteContacts, updateContactField } from "@/app/actions/contacts";
 
@@ -19,6 +27,46 @@ type Contact = {
 
 const selectClass =
   "h-8 rounded-md border border-input bg-background px-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2";
+
+/** Colunas opcionais (item 10 da auditoria de UX) — "Contato" e "Ações" ficam sempre visíveis. */
+const COLUMN_DEFS = [
+  { key: "email", label: "E-mail" },
+  { key: "phone", label: "Telefone" },
+  { key: "jobTitle", label: "Cargo" },
+  { key: "company", label: "Empresa" },
+] as const;
+type ColumnKey = (typeof COLUMN_DEFS)[number]["key"];
+type ColumnVisibility = Record<ColumnKey, boolean>;
+const DEFAULT_COLUMNS: ColumnVisibility = { email: true, phone: true, jobTitle: true, company: true };
+const COLUMNS_STORAGE_KEY = "crm.contacts.visibleColumns";
+
+/** Botão "Colunas" — preferência 100% pessoal de UI, guardada só no navegador (localStorage), sem ida ao servidor. */
+function ColumnsMenu({ columns, onChange }: { columns: ColumnVisibility; onChange: (next: ColumnVisibility) => void }) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs">
+          <Columns3 className="h-3.5 w-3.5" />
+          Colunas
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-44">
+        <DropdownMenuLabel>Colunas visíveis</DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        {COLUMN_DEFS.map((col) => (
+          <DropdownMenuCheckboxItem
+            key={col.key}
+            checked={columns[col.key]}
+            onCheckedChange={(checked) => onChange({ ...columns, [col.key]: checked })}
+            onSelect={(e) => e.preventDefault()}
+          >
+            {col.label}
+          </DropdownMenuCheckboxItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
 
 /**
  * Campo editável inline (item 6 da auditoria de UX) — email/telefone da linha
@@ -96,6 +144,27 @@ export function ContactsTable({
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [assigneeId, setAssigneeId] = useState("");
   const [isPending, startTransition] = useTransition();
+  const [columns, setColumns] = useState<ColumnVisibility>(DEFAULT_COLUMNS);
+
+  // Lê a preferência salva só depois de montar (evita mismatch de hydration —
+  // servidor sempre renderiza o default, cliente ajusta em seguida).
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(COLUMNS_STORAGE_KEY);
+      if (raw) setColumns((prev) => ({ ...prev, ...JSON.parse(raw) }));
+    } catch {
+      // localStorage indisponível (modo privado etc.) — segue com o default, sem quebrar a tela.
+    }
+  }, []);
+
+  function handleColumnsChange(next: ColumnVisibility) {
+    setColumns(next);
+    try {
+      localStorage.setItem(COLUMNS_STORAGE_KEY, JSON.stringify(next));
+    } catch {
+      // idem — falha silenciosa, preferência só não persiste entre sessões.
+    }
+  }
 
   const allSelected = contacts.length > 0 && selected.size === contacts.length;
   const someSelected = selected.size > 0 && !allSelected;
@@ -177,6 +246,13 @@ export function ContactsTable({
         </div>
       )}
 
+      <div className="flex items-center justify-between">
+        <span className="text-xs text-muted-foreground">
+          {contacts.length} contato{contacts.length === 1 ? "" : "s"}
+        </span>
+        <ColumnsMenu columns={columns} onChange={handleColumnsChange} />
+      </div>
+
       <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
         <div className="relative w-full overflow-auto">
           <table className="w-full caption-bottom text-sm">
@@ -189,9 +265,11 @@ export function ContactsTable({
                     aria-label="Selecionar todos os contatos"
                   />
                 </th>
-                <th className="h-12 px-4 text-left align-middle font-semibold text-muted-foreground w-[300px]">Contato</th>
-                <th className="h-12 px-6 text-left align-middle font-semibold text-muted-foreground">Informações</th>
-                <th className="h-12 px-6 text-left align-middle font-semibold text-muted-foreground">Cargo / Empresa</th>
+                <th className="h-12 px-4 text-left align-middle font-semibold text-muted-foreground w-[260px]">Contato</th>
+                {columns.email && <th className="h-12 px-4 text-left align-middle font-semibold text-muted-foreground">E-mail</th>}
+                {columns.phone && <th className="h-12 px-4 text-left align-middle font-semibold text-muted-foreground">Telefone</th>}
+                {columns.jobTitle && <th className="h-12 px-4 text-left align-middle font-semibold text-muted-foreground">Cargo</th>}
+                {columns.company && <th className="h-12 px-4 text-left align-middle font-semibold text-muted-foreground">Empresa</th>}
                 <th className="h-12 px-6 align-middle w-[50px]"></th>
               </tr>
             </thead>
@@ -221,9 +299,9 @@ export function ContactsTable({
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 align-middle">
-                      <div className="flex flex-col gap-2 text-xs">
-                        <span className="flex items-center gap-2 text-muted-foreground">
+                    {columns.email && (
+                      <td className="px-4 py-4 align-middle">
+                        <span className="flex items-center gap-2 text-xs text-muted-foreground">
                           <Mail className="h-3.5 w-3.5 shrink-0" />
                           <InlineContactField
                             value={contact.email}
@@ -234,7 +312,11 @@ export function ContactsTable({
                             onSave={(v) => startTransition(() => updateContactField(workspaceSlug, contact.id, "email", v))}
                           />
                         </span>
-                        <span className="flex items-center gap-2 text-muted-foreground">
+                      </td>
+                    )}
+                    {columns.phone && (
+                      <td className="px-4 py-4 align-middle">
+                        <span className="flex items-center gap-2 text-xs text-muted-foreground">
                           <Phone className="h-3.5 w-3.5 shrink-0" />
                           <InlineContactField
                             value={contact.phone}
@@ -245,21 +327,28 @@ export function ContactsTable({
                             onSave={(v) => startTransition(() => updateContactField(workspaceSlug, contact.id, "phone", v))}
                           />
                         </span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 align-middle">
-                      <div className="flex flex-col items-start gap-2 text-xs">
+                      </td>
+                    )}
+                    {columns.jobTitle && (
+                      <td className="px-4 py-4 align-middle">
                         {contact.jobTitle ? (
-                          <span className="font-medium text-muted-foreground">{contact.jobTitle}</span>
-                        ) : null}
+                          <span className="text-xs font-medium text-muted-foreground">{contact.jobTitle}</span>
+                        ) : (
+                          <span className="text-xs text-muted-foreground/50">-</span>
+                        )}
+                      </td>
+                    )}
+                    {columns.company && (
+                      <td className="px-4 py-4 align-middle">
                         {contact.company ? (
-                          <Badge variant="secondary" className="flex items-center gap-1.5 font-medium bg-muted/50 border-border/50 text-foreground">
+                          <Badge variant="secondary" className="inline-flex items-center gap-1.5 font-medium bg-muted/50 border-border/50 text-foreground">
                             <Building2 className="h-3 w-3 text-primary/70" /> {contact.company.name}
                           </Badge>
-                        ) : null}
-                        {!contact.jobTitle && !contact.company && <span className="text-muted-foreground/50">-</span>}
-                      </div>
-                    </td>
+                        ) : (
+                          <span className="text-xs text-muted-foreground/50">-</span>
+                        )}
+                      </td>
+                    )}
                     <td className="px-6 py-4 align-middle text-right">
                       {/* focus-within além de hover: menu de ações não pode existir só pra quem usa mouse (item 4 da auditoria de UX). */}
                       <div className="opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity">
