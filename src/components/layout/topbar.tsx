@@ -1,13 +1,13 @@
-import { Menu, Search } from "lucide-react";
+import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Sidebar } from "./sidebar";
 import { NotificationsNav } from "./notifications-nav";
+import { TopbarSearch } from "./topbar-search";
 
 export function Topbar({ workspaceSlug }: { workspaceSlug: string }) {
   return (
-    <header className="h-14 border-b bg-background flex items-center justify-between px-4 lg:px-6">
+    <header className="relative h-14 border-b bg-background flex items-center justify-between px-4 lg:px-6">
       <div className="flex items-center gap-4">
         <Sheet>
           <SheetTrigger asChild>
@@ -21,19 +21,7 @@ export function Topbar({ workspaceSlug }: { workspaceSlug: string }) {
             <Sidebar workspaceSlug={workspaceSlug} className="flex" />
           </SheetContent>
         </Sheet>
-        <form action={`/workspaces/${workspaceSlug}/contacts`} className="relative hidden md:flex w-64">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            type="search"
-            name="q"
-            placeholder="Buscar contatos..."
-            aria-label="Buscar contatos"
-            className="w-full bg-muted/50 pl-9 border-none focus-visible:ring-1"
-          />
-          <kbd className="pointer-events-none absolute right-2 top-1.5 hidden select-none items-center gap-1 rounded border bg-background px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100 sm:flex">
-            <span className="text-xs">⌘</span>K
-          </kbd>
-        </form>
+        <TopbarSearch workspaceSlug={workspaceSlug} />
       </div>
       <div className="flex items-center gap-4">
         <NotificationsNav />
