@@ -5,6 +5,7 @@ import { DollarSign, Users, Briefcase, Activity, Mail, Check, Sparkles } from "l
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { DashboardCharts } from "@/components/dashboard/dashboard-charts";
+import { ReorderableWidgets } from "@/components/dashboard/reorderable-widgets";
 
 export default async function DashboardPage(props: { params: Promise<{ slug: string }> }) {
   const params = await props.params;
@@ -117,76 +118,95 @@ export default async function DashboardPage(props: { params: Promise<{ slug: str
           </Card>
         )}
 
-        {/* Cards de Métricas */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Card className="shadow-sm transition-shadow hover:shadow-md">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Valor Total no Funil</CardTitle>
-              <div className="p-2 bg-emerald-500/10 rounded-lg">
-                <DollarSign className="h-4 w-4 text-emerald-500" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-foreground">
-                {formatter.format(totalValue)}
-              </div>
-              {growthPct !== null ? (
-                <p className="text-xs text-emerald-500 mt-2 font-medium flex items-center gap-1">
-                  +{growthPct.toFixed(0)}% <span className="text-muted-foreground font-normal">adicionado este mês</span>
-                </p>
-              ) : (
-                <p className="text-xs text-muted-foreground mt-2">
-                  {valueAddedThisMonth > 0 ? "Todo o valor foi adicionado este mês" : "Nenhum valor no funil ainda"}
-                </p>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card className="shadow-sm transition-shadow hover:shadow-md">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Negócios Ativos</CardTitle>
-              <div className="p-2 bg-blue-500/10 rounded-lg">
-                <Briefcase className="h-4 w-4 text-blue-500" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-foreground">{dealsCount}</div>
-              <p className="text-xs text-muted-foreground mt-2">
-                Oportunidades mapeadas
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="shadow-sm transition-shadow hover:shadow-md">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total de Contatos</CardTitle>
-              <div className="p-2 bg-amber-500/10 rounded-lg">
-                <Users className="h-4 w-4 text-amber-500" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-foreground">{contactsCount}</div>
-              <p className="text-xs text-muted-foreground mt-2">
-                Clientes em potencial
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="shadow-sm transition-shadow hover:shadow-md">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Atividade Geral</CardTitle>
-              <div className="p-2 bg-primary/10 rounded-lg">
-                <Activity className="h-4 w-4 text-primary" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-primary">Saudável</div>
-              <p className="text-xs text-muted-foreground mt-2">
-                Status do pipeline
-              </p>
-            </CardContent>
-          </Card>
-        </div>
+        {/* Cards de Métricas — arrastáveis pelo ícone que aparece no hover (item 12 da auditoria de UX) */}
+        <ReorderableWidgets
+          widgets={[
+            {
+              id: "funnel-value",
+              node: (
+                <Card className="shadow-sm transition-shadow hover:shadow-md">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Valor Total no Funil</CardTitle>
+                    <div className="p-2 bg-emerald-500/10 rounded-lg">
+                      <DollarSign className="h-4 w-4 text-emerald-500" />
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-3xl font-bold text-foreground">
+                      {formatter.format(totalValue)}
+                    </div>
+                    {growthPct !== null ? (
+                      <p className="text-xs text-emerald-500 mt-2 font-medium flex items-center gap-1">
+                        +{growthPct.toFixed(0)}% <span className="text-muted-foreground font-normal">adicionado este mês</span>
+                      </p>
+                    ) : (
+                      <p className="text-xs text-muted-foreground mt-2">
+                        {valueAddedThisMonth > 0 ? "Todo o valor foi adicionado este mês" : "Nenhum valor no funil ainda"}
+                      </p>
+                    )}
+                  </CardContent>
+                </Card>
+              ),
+            },
+            {
+              id: "active-deals",
+              node: (
+                <Card className="shadow-sm transition-shadow hover:shadow-md">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Negócios Ativos</CardTitle>
+                    <div className="p-2 bg-blue-500/10 rounded-lg">
+                      <Briefcase className="h-4 w-4 text-blue-500" />
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-3xl font-bold text-foreground">{dealsCount}</div>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Oportunidades mapeadas
+                    </p>
+                  </CardContent>
+                </Card>
+              ),
+            },
+            {
+              id: "total-contacts",
+              node: (
+                <Card className="shadow-sm transition-shadow hover:shadow-md">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Total de Contatos</CardTitle>
+                    <div className="p-2 bg-amber-500/10 rounded-lg">
+                      <Users className="h-4 w-4 text-amber-500" />
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-3xl font-bold text-foreground">{contactsCount}</div>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Clientes em potencial
+                    </p>
+                  </CardContent>
+                </Card>
+              ),
+            },
+            {
+              id: "activity-status",
+              node: (
+                <Card className="shadow-sm transition-shadow hover:shadow-md">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Atividade Geral</CardTitle>
+                    <div className="p-2 bg-primary/10 rounded-lg">
+                      <Activity className="h-4 w-4 text-primary" />
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-3xl font-bold text-primary">Saudável</div>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Status do pipeline
+                    </p>
+                  </CardContent>
+                </Card>
+              ),
+            },
+          ]}
+        />
 
         {/* Gráficos Interativos */}
         <DashboardCharts recentDeals={serializedRecentDeals} />
