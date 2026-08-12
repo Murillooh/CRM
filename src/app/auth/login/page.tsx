@@ -17,14 +17,14 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState<"login" | "register" | null>(null);
+  const [loading, setLoading] = useState(false);
   const [note, setNote] = useState<{ text: string; isError: boolean } | null>(null);
   const router = useRouter();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setNote(null);
-    setLoading("login");
+    setLoading(true);
     try {
       const { data, error } = await authClient.signIn.email({ email, password });
       if (data) {
@@ -35,32 +35,11 @@ export default function LoginPage() {
     } catch {
       setNote({ text: "Não foi possível conectar ao servidor. Tente novamente.", isError: true });
     } finally {
-      setLoading(null);
+      setLoading(false);
     }
   };
 
-  const handleRegister = async () => {
-    setNote(null);
-    setLoading("register");
-    try {
-      const { data, error } = await authClient.signUp.email({
-        email,
-        password,
-        name: email.split("@")[0],
-      });
-      if (data) {
-        router.push("/app");
-        return;
-      }
-      setNote({ text: error?.message || "Erro ao registrar", isError: true });
-    } catch {
-      setNote({ text: "Não foi possível conectar ao servidor. Tente novamente.", isError: true });
-    } finally {
-      setLoading(null);
-    }
-  };
-
-  const isLoading = loading !== null;
+  const isLoading = loading;
 
   return (
     <div className={styles.page}>
@@ -228,8 +207,8 @@ export default function LoginPage() {
               </div>
 
               <button type="submit" className={styles.btnPrimary} disabled={isLoading}>
-                {loading === "login" && <span className={styles.spinner} />}
-                <span>{loading === "login" ? "Entrando..." : "Entrar"}</span>
+                {isLoading && <span className={styles.spinner} />}
+                <span>{isLoading ? "Entrando..." : "Entrar"}</span>
               </button>
 
               <p className={`${styles.formNote} ${note ? styles.show : ""} ${note?.isError ? styles.isError : ""}`} role="status" aria-live="polite">
@@ -237,12 +216,6 @@ export default function LoginPage() {
               </p>
             </form>
 
-            <p className={styles.altAction}>
-              Ainda não tem conta?{" "}
-              <button type="button" onClick={handleRegister} disabled={isLoading}>
-                {loading === "register" ? "Criando..." : "Criar conta gratuita"}
-              </button>
-            </p>
             <p className={styles.fineprint}>
               Protegido por autenticação segura · <a href="#">Termos</a> e <a href="#">Privacidade</a>
             </p>
