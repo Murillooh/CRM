@@ -16,7 +16,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ slug
       return NextResponse.redirect(new URL(`/workspaces/${slug}/settings?email_error=forbidden`, req.url));
     }
 
-    const redirectUri = new URL(`/api/v1/workspaces/${slug}/email-accounts/callback`, req.url).toString();
+    const redirectUri = new URL(`/api/v1/email-accounts/callback`, req.url).toString();
     const nonce = randomBytes(16).toString("hex");
     const state = `${slug}:${nonce}`;
 
