@@ -3,7 +3,8 @@ import { requireWorkspaceAccess } from "@/lib/auth/guard";
 import { SettingsForm } from "./settings-form";
 import { EmailAccountsSection } from "./email-accounts-section";
 import { SignatureForm } from "./signature-form";
-import { Shield, Users, Mail, Settings2, LayoutTemplate } from "lucide-react";
+import { FormsSection } from "./forms-section";
+import { Shield, Users, Mail, Settings2, LayoutTemplate, FileText } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 
@@ -77,6 +78,13 @@ export default async function SettingsPage(props: {
               >
                 <Mail className="w-4 h-4" />
                 E-mail
+              </Link>
+              <Link 
+                href={`?tab=formularios`} 
+                className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300 ${activeTab === 'formularios' ? 'bg-primary/10 text-primary shadow-sm ring-1 ring-primary/20' : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'}`}
+              >
+                <FileText className="w-4 h-4" />
+                Formulários
               </Link>
             </nav>
           </aside>
@@ -182,6 +190,28 @@ export default async function SettingsPage(props: {
                       <SignatureForm workspaceSlug={params.slug} signature={me?.emailSignature ?? null} />
                     </div>
                   </div>
+                </div>
+              </div>
+            )}
+
+            {/* Sessão de Formulários */}
+            {activeTab === 'formularios' && (
+              <div className="flex flex-col gap-6">
+                <div>
+                  <div className="inline-flex p-2 rounded-lg bg-emerald-500/10 mb-3 ring-1 ring-emerald-500/20">
+                    <FileText className="w-5 h-5 text-emerald-500" />
+                  </div>
+                  <h3 className="text-xl font-bold text-foreground tracking-tight">
+                    Formulários de Captação
+                  </h3>
+                  <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
+                    Obtenha o código HTML para incorporar um formulário no seu site. 
+                    Novos leads cairão diretamente na primeira etapa do seu funil.
+                  </p>
+                </div>
+
+                <div className="rounded-xl border bg-card p-6 md:p-8 shadow-sm">
+                  <FormsSection workspaceId={workspace.id} />
                 </div>
               </div>
             )}
