@@ -45,3 +45,40 @@ export async function updateWorkspace(workspaceSlug: string, formData: FormData)
     revalidatePath(`/workspaces/${workspaceSlug}/settings`);
   }
 }
+
+export async function removeMember(workspaceSlug: string, userIdToRemove: string) {
+  const { workspace, role, user: currentUser } = await requireWorkspaceAccess(workspaceSlug);
+
+  if (role !== "OWNER" && role !== "ADMIN") {
+    throw new Error("Acesso negado. Apenas Administradores ou Donos podem gerenciar membros.");
+  }
+
+  const targetMembership = await db.membership.findUnique({
+    where: {
+      userId_workspaceId: {
+        userId: userIdToRemove,
+        workspaceId: workspace.id,
+      }
+    }
+  });
+
+  if (!targetMembership) {
+    throw new Error("Membro não encontrado.");
+  }
+
+  if (targetMembership.role === "OWNER") {
+    throw new Error("Não é possível remover o Dono do workspace.");
+  }
+
+  if (userIdToRemove === currentUser.id) {
+    throw new Error("Você não pode remover a si mesmo desta forma.");
+  }
+
+  await db.membership.delete({
+    where: {
+      id: targetMembership.id
+    }
+  });
+
+  revalidatePath(`/workspaces/${workspaceSlug}/settings`);
+}

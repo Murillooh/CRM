@@ -4,6 +4,7 @@ import { SettingsForm } from "./settings-form";
 import { EmailAccountsSection } from "./email-accounts-section";
 import { SignatureForm } from "./signature-form";
 import { FormsSection } from "./forms-section";
+import { RemoveMemberButton } from "./remove-member-button";
 import { Shield, Users, Mail, Settings2, LayoutTemplate, FileText } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
@@ -133,6 +134,7 @@ export default async function SettingsPage(props: {
                           <th className="px-6 py-4 font-semibold text-muted-foreground tracking-wider">Usuário</th>
                           <th className="px-6 py-4 font-semibold text-muted-foreground tracking-wider">Email</th>
                           <th className="px-6 py-4 font-semibold text-muted-foreground tracking-wider">Função</th>
+                          <th className="px-6 py-4 font-semibold text-muted-foreground tracking-wider w-20 text-right">Ações</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-border/50">
@@ -153,6 +155,11 @@ export default async function SettingsPage(props: {
                                 {m.role === 'OWNER' && <Shield className="w-3.5 h-3.5" />}
                                 {m.role}
                               </Badge>
+                            </td>
+                            <td className="px-6 py-5 text-right">
+                              {(role === 'OWNER' || role === 'ADMIN') && m.role !== 'OWNER' && m.user.id !== user.id && (
+                                <RemoveMemberButton workspaceSlug={workspace.slug} userId={m.user.id} />
+                              )}
                             </td>
                           </tr>
                         ))}
