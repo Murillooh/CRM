@@ -143,4 +143,15 @@
   ::-webkit-scrollbar-thumb:hover {
     background: hsl(var(--muted-foreground) / 0.5);
   }
+
+  /* Override Autofill Background for Dark Themes */
+  .dark-autofill:-webkit-autofill,
+  .dark-autofill:-webkit-autofill:hover, 
+  .dark-autofill:-webkit-autofill:focus, 
+  .dark-autofill:-webkit-autofill:active{
+    -webkit-box-shadow: 0 0 0 1000px black inset !important;
+    -webkit-text-fill-color: white !important;
+    background-color: black !important;
+    color: white !important;
+  }
 }

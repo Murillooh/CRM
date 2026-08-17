@@ -116,7 +116,7 @@ export default function HostedFormPage({
                 value={formData.name}
                 onChange={handleChange}
                 placeholder="Digite seu nome aqui..."
-                className="w-full text-2xl md:text-4xl font-light bg-transparent border-0 border-b-2 border-white/20 focus:border-white focus:ring-0 placeholder:text-white/20 py-4 outline-none transition-colors"
+                className="w-full text-2xl md:text-4xl font-light bg-transparent border-0 border-b-2 border-white/20 focus:border-white focus:ring-0 placeholder:text-white/20 py-4 outline-none transition-colors dark-autofill"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && isStep1Valid) handleNext();
                 }}
@@ -147,7 +147,7 @@ export default function HostedFormPage({
                 value={formData.companyName}
                 onChange={handleChange}
                 placeholder="Sua empresa (opcional)"
-                className="w-full text-2xl md:text-4xl font-light bg-transparent border-0 border-b-2 border-white/20 focus:border-white focus:ring-0 placeholder:text-white/20 py-4 outline-none transition-colors"
+                className="w-full text-2xl md:text-4xl font-light bg-transparent border-0 border-b-2 border-white/20 focus:border-white focus:ring-0 placeholder:text-white/20 py-4 outline-none transition-colors dark-autofill"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') handleNext();
                 }}
@@ -178,7 +178,7 @@ export default function HostedFormPage({
                 onChange={handleChange}
                 rows={2}
                 placeholder="Conte um pouco sobre o seu projeto..."
-                className="w-full text-2xl md:text-4xl font-light bg-transparent border-0 border-b-2 border-white/20 focus:border-white focus:ring-0 placeholder:text-white/20 py-4 outline-none transition-colors resize-none overflow-hidden"
+                className="w-full text-2xl md:text-4xl font-light bg-transparent border-0 border-b-2 border-white/20 focus:border-white focus:ring-0 placeholder:text-white/20 py-4 outline-none transition-colors resize-none overflow-hidden dark-autofill"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
@@ -216,7 +216,7 @@ export default function HostedFormPage({
                     value={formData.email}
                     onChange={handleChange}
                     placeholder="seu.email@exemplo.com"
-                    className="w-full text-2xl md:text-4xl font-light bg-transparent border-0 border-b-2 border-white/20 focus:border-white focus:ring-0 placeholder:text-white/20 py-2 outline-none transition-colors"
+                    className="w-full text-2xl md:text-4xl font-light bg-transparent border-0 border-b-2 border-white/20 focus:border-white focus:ring-0 placeholder:text-white/20 py-2 outline-none transition-colors dark-autofill"
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' && isStep4Valid) handleSubmit();
                     }}
@@ -231,7 +231,7 @@ export default function HostedFormPage({
                     value={formData.phone}
                     onChange={handleChange}
                     placeholder="(00) 00000-0000"
-                    className="w-full text-2xl md:text-4xl font-light bg-transparent border-0 border-b-2 border-white/20 focus:border-white focus:ring-0 placeholder:text-white/20 py-2 outline-none transition-colors"
+                    className="w-full text-2xl md:text-4xl font-light bg-transparent border-0 border-b-2 border-white/20 focus:border-white focus:ring-0 placeholder:text-white/20 py-2 outline-none transition-colors dark-autofill"
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' && isStep4Valid) handleSubmit();
                     }}
