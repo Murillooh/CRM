@@ -68,7 +68,7 @@ export default function HostedFormPage({
 
   if (success) {
     return (
-      <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-6 selection:bg-white/30">
+      <div className="min-h-[100dvh] bg-black text-white flex flex-col items-center justify-center p-6 selection:bg-white/30">
         <div className="animate-in fade-in slide-in-from-bottom-8 duration-700 max-w-2xl text-center flex flex-col items-center">
           <div className="w-24 h-24 bg-white/10 text-white rounded-full flex items-center justify-center mb-8 backdrop-blur-md">
             <Check className="w-12 h-12" />
@@ -85,7 +85,7 @@ export default function HostedFormPage({
   const progress = (step / 4) * 100;
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col font-sans selection:bg-white/30">
+    <div className="min-h-[100dvh] bg-black text-white flex flex-col font-sans selection:bg-white/30">
       {/* Progress Bar Top */}
       <div className="fixed top-0 left-0 w-full h-1.5 bg-white/10 z-50">
         <div 
