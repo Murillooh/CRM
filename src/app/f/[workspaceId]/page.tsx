@@ -1,12 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { use } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { CheckCircle2, Loader2, Building2 } from "lucide-react";
+import { useState, use, useRef, useEffect } from "react";
+import { CheckCircle2, ArrowRight, Loader2, Check } from "lucide-react";
 
 export default function HostedFormPage({
   params,
@@ -18,155 +13,265 @@ export default function HostedFormPage({
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [step, setStep] = useState(1);
+  const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement>(null);
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    companyName: "",
+    message: "",
+  });
+
+  // Foca no input sempre que a etapa muda
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [step]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
+  const handleNext = () => {
+    if (step < 4) setStep(step + 1);
+  };
+
+  const handleSubmit = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     setLoading(true);
     setError(null);
-
-    const formData = new FormData(e.currentTarget);
-    const data = Object.fromEntries(formData.entries());
 
     try {
       const response = await fetch(`/api/webhooks/forms/${workspaceId}`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Erro ao enviar o formulário");
+        throw new Error("Erro ao enviar o formulário");
       }
 
       setSuccess(true);
     } catch (err: any) {
-      setError(err.message || "Ocorreu um erro inesperado. Tente novamente.");
+      setError(err.message || "Ocorreu um erro inesperado.");
     } finally {
       setLoading(false);
     }
   };
 
+  const isStep1Valid = formData.name.trim().length >= 2;
+  const isStep4Valid = formData.email.includes("@") && formData.email.includes(".");
+
   if (success) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center p-4">
-        <div className="max-w-md w-full bg-white dark:bg-slate-900 shadow-xl rounded-2xl p-8 text-center animate-in fade-in zoom-in duration-500">
-          <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-500 rounded-full flex items-center justify-center mx-auto mb-6">
-            <CheckCircle2 className="w-8 h-8" />
+      <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-6 selection:bg-white/30">
+        <div className="animate-in fade-in slide-in-from-bottom-8 duration-700 max-w-2xl text-center flex flex-col items-center">
+          <div className="w-24 h-24 bg-white/10 text-white rounded-full flex items-center justify-center mb-8 backdrop-blur-md">
+            <Check className="w-12 h-12" />
           </div>
-          <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">Mensagem Enviada!</h2>
-          <p className="text-slate-500 dark:text-slate-400 mb-8">
-            Recebemos o seu contato com sucesso. Nossa equipe entrará em contato em breve.
+          <h2 className="text-4xl md:text-6xl font-light mb-6 tracking-tight">Tudo certo.</h2>
+          <p className="text-xl md:text-2xl text-white/50 font-light max-w-lg leading-relaxed">
+            Nossa equipe recebeu suas informações e entrará em contato muito em breve.
           </p>
-          <Button 
-            variant="outline" 
-            className="w-full"
-            onClick={() => setSuccess(false)}
-          >
-            Enviar nova mensagem
-          </Button>
         </div>
       </div>
     );
   }
 
+  const progress = (step / 4) * 100;
+
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center p-4 py-12">
-      <div className="max-w-md w-full">
-        {/* Header (Poderia carregar a logo do DB) */}
-        <div className="text-center mb-8">
-          <div className="inline-flex w-16 h-16 bg-primary text-primary-foreground rounded-2xl shadow-lg items-center justify-center mb-4">
-            <Building2 className="w-8 h-8" />
-          </div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Fale Conosco</h1>
-          <p className="text-slate-500 dark:text-slate-400 mt-2">
-            Preencha o formulário abaixo e entraremos em contato.
-          </p>
-        </div>
+    <div className="min-h-screen bg-black text-white flex flex-col font-sans selection:bg-white/30">
+      {/* Progress Bar Top */}
+      <div className="fixed top-0 left-0 w-full h-1.5 bg-white/10 z-50">
+        <div 
+          className="h-full bg-white transition-all duration-700 ease-out"
+          style={{ width: `${progress}%` }}
+        />
+      </div>
 
-        <div className="bg-white dark:bg-slate-900 shadow-xl rounded-2xl p-6 md:p-8 border border-slate-100 dark:border-slate-800">
-          <form onSubmit={handleSubmit} className="space-y-5">
-            {error && (
-              <div className="p-3 text-sm text-red-600 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-900/50">
-                {error}
+      <div className="flex-1 flex flex-col justify-center items-center p-6 md:p-12">
+        <div className="w-full max-w-3xl">
+          
+          {error && (
+            <div className="mb-8 p-4 text-sm text-red-400 bg-red-950/50 border border-red-900/50 rounded-lg animate-in fade-in">
+              {error}
+            </div>
+          )}
+
+          {step === 1 && (
+            <div className="animate-in fade-in slide-in-from-bottom-12 duration-700 fill-mode-both">
+              <h2 className="text-3xl md:text-5xl font-light mb-8 md:mb-12 leading-tight tracking-tight text-white/90">
+                <span className="text-white/30 text-2xl md:text-4xl mr-2">1</span> 
+                <ArrowRight className="inline-block w-6 h-6 md:w-8 md:h-8 mr-2 text-white/30" /> 
+                Olá! Como podemos <br className="hidden md:block"/> te chamar?
+              </h2>
+              <input 
+                ref={inputRef as any}
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                placeholder="Digite seu nome aqui..."
+                className="w-full text-2xl md:text-4xl font-light bg-transparent border-0 border-b-2 border-white/20 focus:border-white focus:ring-0 placeholder:text-white/20 py-4 outline-none transition-colors"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && isStep1Valid) handleNext();
+                }}
+              />
+              <div className="mt-10 flex items-center gap-4">
+                <button 
+                  onClick={handleNext}
+                  disabled={!isStep1Valid}
+                  className="px-6 py-3 bg-white text-black font-semibold text-lg md:text-xl rounded-md disabled:opacity-30 disabled:cursor-not-allowed hover:bg-white/90 transition-all flex items-center"
+                >
+                  Ok <Check className="w-5 h-5 ml-2" />
+                </button>
+                <span className="text-white/30 text-sm md:text-base">pressione <strong className="font-semibold text-white/50">Enter ↵</strong></span>
               </div>
-            )}
-
-            <div className="space-y-2">
-              <Label htmlFor="name">Nome Completo *</Label>
-              <Input 
-                id="name" 
-                name="name" 
-                required 
-                placeholder="Seu nome"
-                className="bg-slate-50 dark:bg-slate-950"
-              />
             </div>
+          )}
 
-            <div className="space-y-2">
-              <Label htmlFor="email">E-mail *</Label>
-              <Input 
-                id="email" 
-                name="email" 
-                type="email" 
-                required 
-                placeholder="seu.email@exemplo.com"
-                className="bg-slate-50 dark:bg-slate-950"
+          {step === 2 && (
+            <div className="animate-in fade-in slide-in-from-bottom-12 duration-700 fill-mode-both">
+              <h2 className="text-3xl md:text-5xl font-light mb-8 md:mb-12 leading-tight tracking-tight text-white/90">
+                <span className="text-white/30 text-2xl md:text-4xl mr-2">2</span> 
+                <ArrowRight className="inline-block w-6 h-6 md:w-8 md:h-8 mr-2 text-white/30" /> 
+                Legal, <strong className="font-semibold text-white">{formData.name.split(' ')[0]}</strong>!<br/> Qual o nome da sua empresa?
+              </h2>
+              <input 
+                ref={inputRef as any}
+                name="companyName"
+                value={formData.companyName}
+                onChange={handleChange}
+                placeholder="Sua empresa (opcional)"
+                className="w-full text-2xl md:text-4xl font-light bg-transparent border-0 border-b-2 border-white/20 focus:border-white focus:ring-0 placeholder:text-white/20 py-4 outline-none transition-colors"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleNext();
+                }}
               />
+              <div className="mt-10 flex items-center gap-4">
+                <button 
+                  onClick={handleNext}
+                  className="px-6 py-3 bg-white text-black font-semibold text-lg md:text-xl rounded-md hover:bg-white/90 transition-all flex items-center"
+                >
+                  Ok <Check className="w-5 h-5 ml-2" />
+                </button>
+                <span className="text-white/30 text-sm md:text-base">pressione <strong className="font-semibold text-white/50">Enter ↵</strong></span>
+              </div>
             </div>
+          )}
 
-            <div className="space-y-2">
-              <Label htmlFor="phone">Telefone / WhatsApp</Label>
-              <Input 
-                id="phone" 
-                name="phone" 
-                type="tel" 
-                placeholder="(00) 00000-0000"
-                className="bg-slate-50 dark:bg-slate-950"
+          {step === 3 && (
+            <div className="animate-in fade-in slide-in-from-bottom-12 duration-700 fill-mode-both">
+              <h2 className="text-3xl md:text-5xl font-light mb-8 md:mb-12 leading-tight tracking-tight text-white/90">
+                <span className="text-white/30 text-2xl md:text-4xl mr-2">3</span> 
+                <ArrowRight className="inline-block w-6 h-6 md:w-8 md:h-8 mr-2 text-white/30" /> 
+                O que você está <br className="hidden md:block"/> precisando no momento?
+              </h2>
+              <textarea 
+                ref={inputRef as any}
+                name="message"
+                value={formData.message}
+                onChange={handleChange}
+                rows={2}
+                placeholder="Conte um pouco sobre o seu projeto..."
+                className="w-full text-2xl md:text-4xl font-light bg-transparent border-0 border-b-2 border-white/20 focus:border-white focus:ring-0 placeholder:text-white/20 py-4 outline-none transition-colors resize-none overflow-hidden"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleNext();
+                  }
+                }}
               />
+              <div className="mt-10 flex items-center gap-4">
+                <button 
+                  onClick={handleNext}
+                  className="px-6 py-3 bg-white text-black font-semibold text-lg md:text-xl rounded-md hover:bg-white/90 transition-all flex items-center"
+                >
+                  Ok <Check className="w-5 h-5 ml-2" />
+                </button>
+                <span className="text-white/30 text-sm md:text-base">pressione <strong className="font-semibold text-white/50">Enter ↵</strong></span>
+              </div>
             </div>
+          )}
 
-            <div className="space-y-2">
-              <Label htmlFor="companyName">Nome da Empresa</Label>
-              <Input 
-                id="companyName" 
-                name="companyName" 
-                placeholder="Sua empresa"
-                className="bg-slate-50 dark:bg-slate-950"
-              />
+          {step === 4 && (
+            <div className="animate-in fade-in slide-in-from-bottom-12 duration-700 fill-mode-both">
+              <h2 className="text-3xl md:text-5xl font-light mb-8 md:mb-12 leading-tight tracking-tight text-white/90">
+                <span className="text-white/30 text-2xl md:text-4xl mr-2">4</span> 
+                <ArrowRight className="inline-block w-6 h-6 md:w-8 md:h-8 mr-2 text-white/30" /> 
+                Para finalizar, onde <br className="hidden md:block"/> enviamos a resposta?
+              </h2>
+              
+              <div className="space-y-10 md:space-y-12">
+                <div>
+                  <label className="block text-white/50 text-sm md:text-base mb-2">E-mail *</label>
+                  <input 
+                    ref={inputRef as any}
+                    name="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    placeholder="seu.email@exemplo.com"
+                    className="w-full text-2xl md:text-4xl font-light bg-transparent border-0 border-b-2 border-white/20 focus:border-white focus:ring-0 placeholder:text-white/20 py-2 outline-none transition-colors"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && isStep4Valid) handleSubmit();
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-white/50 text-sm md:text-base mb-2">Telefone / WhatsApp</label>
+                  <input 
+                    name="phone"
+                    type="tel"
+                    value={formData.phone}
+                    onChange={handleChange}
+                    placeholder="(00) 00000-0000"
+                    className="w-full text-2xl md:text-4xl font-light bg-transparent border-0 border-b-2 border-white/20 focus:border-white focus:ring-0 placeholder:text-white/20 py-2 outline-none transition-colors"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && isStep4Valid) handleSubmit();
+                    }}
+                  />
+                </div>
+              </div>
+
+              <div className="mt-12 flex items-center gap-4">
+                <button 
+                  onClick={() => handleSubmit()}
+                  disabled={!isStep4Valid || loading}
+                  className="px-8 py-4 bg-white text-black font-semibold text-lg md:text-xl rounded-md disabled:opacity-30 disabled:cursor-not-allowed hover:bg-white/90 transition-all flex items-center"
+                >
+                  {loading ? (
+                    <><Loader2 className="mr-3 h-6 w-6 animate-spin" /> Enviando...</>
+                  ) : (
+                    <>Enviar <CheckCircle2 className="w-6 h-6 ml-3" /></>
+                  )}
+                </button>
+                <span className="text-white/30 text-sm md:text-base">pressione <strong className="font-semibold text-white/50">Enter ↵</strong></span>
+              </div>
             </div>
+          )}
 
-            <div className="space-y-2">
-              <Label htmlFor="message">Como podemos ajudar?</Label>
-              <Textarea 
-                id="message" 
-                name="message" 
-                rows={4} 
-                placeholder="Escreva sua mensagem aqui..."
-                className="bg-slate-50 dark:bg-slate-950 resize-none"
-              />
-            </div>
-
-            <Button type="submit" className="w-full h-11 text-base mt-2" disabled={loading}>
-              {loading ? (
-                <>
-                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                  Enviando...
-                </>
-              ) : (
-                "Enviar Mensagem"
-              )}
-            </Button>
-          </form>
         </div>
-        
-        <div className="text-center mt-8">
-          <p className="text-xs text-slate-400 dark:text-slate-500">
-            Protegido e alimentado por <strong>CRM</strong>
-          </p>
+      </div>
+      
+      {/* Footer minimal */}
+      <div className="p-6 flex justify-between items-center text-white/20 text-xs md:text-sm">
+        <div>
+          Powered by <strong className="text-white/40">CRM</strong>
         </div>
+        {step > 1 && (
+          <button 
+            onClick={() => setStep(step - 1)}
+            className="hover:text-white/60 transition-colors flex items-center"
+          >
+            ← Voltar
+          </button>
+        )}
       </div>
     </div>
   );
