@@ -91,8 +91,9 @@ export function FormsSection({ workspaceSlug }: FormsSectionProps) {
         <div className="flex items-center gap-2">
           <Input
             readOnly
-            value={hostedFormUrl}
-            className="font-mono text-sm text-primary/80"
+            value="Link do Formulário"
+            title={hostedFormUrl}
+            className="text-sm text-foreground/80"
           />
           <Button
             variant="secondary"
