@@ -21,7 +21,7 @@ export function FormsSection({ workspaceId }: FormsSectionProps) {
 
   const htmlSnippet = `<!-- Incorporar este formulário no seu site -->
 <form action="${webhookUrl}" method="POST" style="max-width: 400px; font-family: sans-serif; display: flex; flex-direction: column; gap: 12px;">
-  
+
   <label for="name" style="font-weight: 500;">Nome Completo *</label>
   <input type="text" id="name" name="name" required style="padding: 8px; border: 1px solid #ccc; border-radius: 4px;" />
 
@@ -33,6 +33,21 @@ export function FormsSection({ workspaceId }: FormsSectionProps) {
 
   <label for="companyName" style="font-weight: 500;">Nome da Empresa</label>
   <input type="text" id="companyName" name="companyName" style="padding: 8px; border: 1px solid #ccc; border-radius: 4px;" />
+
+  <label for="marketView" style="font-weight: 500;">Como você vê seu mercado hoje?</label>
+  <textarea id="marketView" name="marketView" rows="2" style="padding: 8px; border: 1px solid #ccc; border-radius: 4px;"></textarea>
+
+  <label for="bottleneck" style="font-weight: 500;">Qual seria seu maior gargalo na sua empresa?</label>
+  <textarea id="bottleneck" name="bottleneck" rows="2" style="padding: 8px; border: 1px solid #ccc; border-radius: 4px;"></textarea>
+
+  <label for="acquisition" style="font-weight: 500;">Como você hoje capta clientes?</label>
+  <textarea id="acquisition" name="acquisition" rows="2" style="padding: 8px; border: 1px solid #ccc; border-radius: 4px;"></textarea>
+
+  <label for="retention" style="font-weight: 500;">Como você mantém seus clientes comprando recorrente?</label>
+  <textarea id="retention" name="retention" rows="2" style="padding: 8px; border: 1px solid #ccc; border-radius: 4px;"></textarea>
+
+  <label for="commitmentScore" style="font-weight: 500;">De 0 a 10, quanto você está disposto a dar esse passo para solucionar sua maior dor?</label>
+  <input type="number" id="commitmentScore" name="commitmentScore" min="0" max="10" style="padding: 8px; border: 1px solid #ccc; border-radius: 4px;" />
 
   <label for="message" style="font-weight: 500;">Mensagem</label>
   <textarea id="message" name="message" rows="3" style="padding: 8px; border: 1px solid #ccc; border-radius: 4px;"></textarea>
@@ -161,6 +176,26 @@ export function FormsSection({ workspaceId }: FormsSectionProps) {
             ,
             <code className="mx-1 px-1 py-0.5 bg-muted rounded border">
               companyName
+            </code>
+            ,
+            <code className="mx-1 px-1 py-0.5 bg-muted rounded border">
+              marketView
+            </code>
+            ,
+            <code className="mx-1 px-1 py-0.5 bg-muted rounded border">
+              bottleneck
+            </code>
+            ,
+            <code className="mx-1 px-1 py-0.5 bg-muted rounded border">
+              acquisition
+            </code>
+            ,
+            <code className="mx-1 px-1 py-0.5 bg-muted rounded border">
+              retention
+            </code>
+            ,
+            <code className="mx-1 px-1 py-0.5 bg-muted rounded border">
+              commitmentScore
             </code>{" "}
             e
             <code className="mx-1 px-1 py-0.5 bg-muted rounded border">

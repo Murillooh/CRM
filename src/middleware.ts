@@ -5,7 +5,17 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // 1. Libera rotas publicas e rotas de API do Auth
-  if (pathname.startsWith('/auth') || pathname.startsWith('/api/public') || pathname.startsWith('/api/auth') || pathname.startsWith('/api/setup-admin') || pathname === '/') {
+  // /f/ e /api/webhooks/forms/ são o formulário hospedado que o cliente final
+  // preenche sem conta no CRM — não pode exigir login.
+  if (
+    pathname.startsWith('/auth') ||
+    pathname.startsWith('/api/public') ||
+    pathname.startsWith('/api/auth') ||
+    pathname.startsWith('/api/setup-admin') ||
+    pathname.startsWith('/f/') ||
+    pathname.startsWith('/api/webhooks/forms/') ||
+    pathname === '/'
+  ) {
     return NextResponse.next();
   }
 

@@ -51,6 +51,11 @@ export async function POST(
       phone,
       companyName,
       message,
+      marketView,
+      bottleneck,
+      acquisition,
+      retention,
+      commitmentScore,
     } = data;
 
     if (!name || (!email && !phone)) {
@@ -160,15 +165,29 @@ export async function POST(
       },
     });
 
-    // Se houver uma mensagem, adicionamos como nota no Deal
-    if (message) {
-      // Precisamos do autor para a nota. Como é externo, vamos criar uma nota "Sistema" 
-      // ou se não for possível, omitir. O schema de Note exige `authorId`. 
-      // Como não temos `authorId` para envios externos (webhook), precisamos de uma Activity do tipo SYSTEM_LOG.
+    // Se houver mensagem e/ou respostas de qualificação, adicionamos como nota no Deal.
+    // Precisamos do autor para a nota. Como é externo, vamos criar uma nota "Sistema"
+    // ou se não for possível, omitir. O schema de Note exige `authorId`.
+    // Como não temos `authorId` para envios externos (webhook), precisamos de uma Activity do tipo SYSTEM_LOG.
+    const qualificationLines: string[] = [];
+    if (marketView) qualificationLines.push(`Como vê o mercado hoje: ${marketView}`);
+    if (bottleneck) qualificationLines.push(`Maior gargalo na empresa: ${bottleneck}`);
+    if (acquisition) qualificationLines.push(`Como capta clientes hoje: ${acquisition}`);
+    if (retention) qualificationLines.push(`Como mantém clientes comprando recorrente: ${retention}`);
+    if (commitmentScore !== undefined && commitmentScore !== null && commitmentScore !== "") {
+      qualificationLines.push(`Disposição (0-10) para resolver a maior dor: ${commitmentScore}`);
+    }
+
+    const noteSections = [
+      message ? `Mensagem enviada via formulário do site:\n\n${message}` : null,
+      qualificationLines.length ? `Diagnóstico do lead:\n${qualificationLines.join("\n")}` : null,
+    ].filter(Boolean);
+
+    if (noteSections.length > 0) {
       await db.activity.create({
         data: {
           type: "SYSTEM_LOG",
-          description: `Mensagem enviada via formulário do site:\n\n${message}`,
+          description: noteSections.join("\n\n"),
           workspaceId,
           dealId: deal.id,
           contactId: contact.id,

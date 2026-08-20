@@ -22,6 +22,11 @@ export default function HostedFormPage({
     phone: "",
     companyName: "",
     message: "",
+    marketView: "",
+    bottleneck: "",
+    acquisition: "",
+    retention: "",
+    commitmentScore: "",
   });
 
   // Foca no input sempre que a etapa muda
@@ -35,8 +40,15 @@ export default function HostedFormPage({
     setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
+  const TOTAL_STEPS = 9;
+
   const handleNext = () => {
-    if (step < 4) setStep(step + 1);
+    if (step < TOTAL_STEPS) setStep(step + 1);
+  };
+
+  const selectScoreAndAdvance = (score: number) => {
+    setFormData((prev) => ({ ...prev, commitmentScore: String(score) }));
+    setStep((s) => Math.min(s + 1, TOTAL_STEPS));
   };
 
   const handleSubmit = async (e?: React.FormEvent) => {
@@ -64,7 +76,7 @@ export default function HostedFormPage({
   };
 
   const isStep1Valid = formData.name.trim().length >= 2;
-  const isStep4Valid = formData.email.includes("@") && formData.email.includes(".");
+  const isFinalStepValid = formData.email.includes("@") && formData.email.includes(".");
 
   if (success) {
     return (
@@ -82,7 +94,7 @@ export default function HostedFormPage({
     );
   }
 
-  const progress = (step / 4) * 100;
+  const progress = (step / TOTAL_STEPS) * 100;
 
   return (
     <div className="min-h-[100dvh] bg-black text-white flex flex-col font-sans selection:bg-white/30">
@@ -201,15 +213,180 @@ export default function HostedFormPage({
           {step === 4 && (
             <div className="animate-in fade-in slide-in-from-bottom-12 duration-700 fill-mode-both">
               <h2 className="text-3xl md:text-5xl font-light mb-8 md:mb-12 leading-tight tracking-tight text-white/90">
-                <span className="text-white/30 text-2xl md:text-4xl mr-2">4</span> 
-                <ArrowRight className="inline-block w-6 h-6 md:w-8 md:h-8 mr-2 text-white/30" /> 
+                <span className="text-white/30 text-2xl md:text-4xl mr-2">4</span>
+                <ArrowRight className="inline-block w-6 h-6 md:w-8 md:h-8 mr-2 text-white/30" />
+                Como você vê <br className="hidden md:block"/> seu mercado hoje?
+              </h2>
+              <textarea
+                ref={inputRef as any}
+                name="marketView"
+                value={formData.marketView}
+                onChange={handleChange}
+                rows={2}
+                placeholder="Conte como enxerga seu mercado..."
+                className="w-full text-2xl md:text-4xl font-light bg-transparent border-0 border-b-2 border-white/20 focus:border-white focus:ring-0 placeholder:text-white/20 py-4 outline-none transition-colors resize-none overflow-hidden dark-autofill"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleNext();
+                  }
+                }}
+              />
+              <div className="mt-10 flex items-center gap-4">
+                <button
+                  onClick={handleNext}
+                  className="px-6 py-3 bg-white text-black font-semibold text-lg md:text-xl rounded-md hover:bg-white/90 transition-all flex items-center"
+                >
+                  Ok <Check className="w-5 h-5 ml-2" />
+                </button>
+                <span className="text-white/30 text-sm md:text-base">pressione <strong className="font-semibold text-white/50">Enter ↵</strong></span>
+              </div>
+            </div>
+          )}
+
+          {step === 5 && (
+            <div className="animate-in fade-in slide-in-from-bottom-12 duration-700 fill-mode-both">
+              <h2 className="text-3xl md:text-5xl font-light mb-8 md:mb-12 leading-tight tracking-tight text-white/90">
+                <span className="text-white/30 text-2xl md:text-4xl mr-2">5</span>
+                <ArrowRight className="inline-block w-6 h-6 md:w-8 md:h-8 mr-2 text-white/30" />
+                Qual seria seu maior <br className="hidden md:block"/> gargalo na sua empresa?
+              </h2>
+              <textarea
+                ref={inputRef as any}
+                name="bottleneck"
+                value={formData.bottleneck}
+                onChange={handleChange}
+                rows={2}
+                placeholder="O que mais trava o crescimento hoje..."
+                className="w-full text-2xl md:text-4xl font-light bg-transparent border-0 border-b-2 border-white/20 focus:border-white focus:ring-0 placeholder:text-white/20 py-4 outline-none transition-colors resize-none overflow-hidden dark-autofill"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleNext();
+                  }
+                }}
+              />
+              <div className="mt-10 flex items-center gap-4">
+                <button
+                  onClick={handleNext}
+                  className="px-6 py-3 bg-white text-black font-semibold text-lg md:text-xl rounded-md hover:bg-white/90 transition-all flex items-center"
+                >
+                  Ok <Check className="w-5 h-5 ml-2" />
+                </button>
+                <span className="text-white/30 text-sm md:text-base">pressione <strong className="font-semibold text-white/50">Enter ↵</strong></span>
+              </div>
+            </div>
+          )}
+
+          {step === 6 && (
+            <div className="animate-in fade-in slide-in-from-bottom-12 duration-700 fill-mode-both">
+              <h2 className="text-3xl md:text-5xl font-light mb-8 md:mb-12 leading-tight tracking-tight text-white/90">
+                <span className="text-white/30 text-2xl md:text-4xl mr-2">6</span>
+                <ArrowRight className="inline-block w-6 h-6 md:w-8 md:h-8 mr-2 text-white/30" />
+                Como você hoje <br className="hidden md:block"/> capta clientes?
+              </h2>
+              <textarea
+                ref={inputRef as any}
+                name="acquisition"
+                value={formData.acquisition}
+                onChange={handleChange}
+                rows={2}
+                placeholder="Indicação, tráfego pago, prospecção..."
+                className="w-full text-2xl md:text-4xl font-light bg-transparent border-0 border-b-2 border-white/20 focus:border-white focus:ring-0 placeholder:text-white/20 py-4 outline-none transition-colors resize-none overflow-hidden dark-autofill"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleNext();
+                  }
+                }}
+              />
+              <div className="mt-10 flex items-center gap-4">
+                <button
+                  onClick={handleNext}
+                  className="px-6 py-3 bg-white text-black font-semibold text-lg md:text-xl rounded-md hover:bg-white/90 transition-all flex items-center"
+                >
+                  Ok <Check className="w-5 h-5 ml-2" />
+                </button>
+                <span className="text-white/30 text-sm md:text-base">pressione <strong className="font-semibold text-white/50">Enter ↵</strong></span>
+              </div>
+            </div>
+          )}
+
+          {step === 7 && (
+            <div className="animate-in fade-in slide-in-from-bottom-12 duration-700 fill-mode-both">
+              <h2 className="text-3xl md:text-5xl font-light mb-8 md:mb-12 leading-tight tracking-tight text-white/90">
+                <span className="text-white/30 text-2xl md:text-4xl mr-2">7</span>
+                <ArrowRight className="inline-block w-6 h-6 md:w-8 md:h-8 mr-2 text-white/30" />
+                Como você mantém seus <br className="hidden md:block"/> clientes comprando recorrente?
+              </h2>
+              <textarea
+                ref={inputRef as any}
+                name="retention"
+                value={formData.retention}
+                onChange={handleChange}
+                rows={2}
+                placeholder="Como funciona a recompra hoje..."
+                className="w-full text-2xl md:text-4xl font-light bg-transparent border-0 border-b-2 border-white/20 focus:border-white focus:ring-0 placeholder:text-white/20 py-4 outline-none transition-colors resize-none overflow-hidden dark-autofill"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleNext();
+                  }
+                }}
+              />
+              <div className="mt-10 flex items-center gap-4">
+                <button
+                  onClick={handleNext}
+                  className="px-6 py-3 bg-white text-black font-semibold text-lg md:text-xl rounded-md hover:bg-white/90 transition-all flex items-center"
+                >
+                  Ok <Check className="w-5 h-5 ml-2" />
+                </button>
+                <span className="text-white/30 text-sm md:text-base">pressione <strong className="font-semibold text-white/50">Enter ↵</strong></span>
+              </div>
+            </div>
+          )}
+
+          {step === 8 && (
+            <div className="animate-in fade-in slide-in-from-bottom-12 duration-700 fill-mode-both">
+              <h2 className="text-3xl md:text-5xl font-light mb-8 md:mb-12 leading-tight tracking-tight text-white/90">
+                <span className="text-white/30 text-2xl md:text-4xl mr-2">8</span>
+                <ArrowRight className="inline-block w-6 h-6 md:w-8 md:h-8 mr-2 text-white/30" />
+                Se fosse para solucionar sua maior dor no seu negócio, <br className="hidden md:block"/> de 0 a 10, quanto você está disposto a dar esse passo?
+              </h2>
+              <div className="flex flex-wrap gap-3">
+                {Array.from({ length: 11 }, (_, n) => n).map((n) => (
+                  <button
+                    key={n}
+                    type="button"
+                    onClick={() => selectScoreAndAdvance(n)}
+                    className={`w-12 h-12 md:w-14 md:h-14 rounded-md text-lg md:text-xl font-semibold border-2 transition-all ${
+                      formData.commitmentScore === String(n)
+                        ? "bg-white text-black border-white"
+                        : "border-white/20 text-white/70 hover:border-white/60 hover:text-white"
+                    }`}
+                  >
+                    {n}
+                  </button>
+                ))}
+              </div>
+              <div className="mt-10 flex items-center gap-4">
+                <span className="text-white/30 text-sm md:text-base">clique num número pra continuar</span>
+              </div>
+            </div>
+          )}
+
+          {step === 9 && (
+            <div className="animate-in fade-in slide-in-from-bottom-12 duration-700 fill-mode-both">
+              <h2 className="text-3xl md:text-5xl font-light mb-8 md:mb-12 leading-tight tracking-tight text-white/90">
+                <span className="text-white/30 text-2xl md:text-4xl mr-2">9</span>
+                <ArrowRight className="inline-block w-6 h-6 md:w-8 md:h-8 mr-2 text-white/30" />
                 Para finalizar, onde <br className="hidden md:block"/> enviamos a resposta?
               </h2>
-              
+
               <div className="space-y-10 md:space-y-12">
                 <div>
                   <label className="block text-white/50 text-sm md:text-base mb-2">E-mail *</label>
-                  <input 
+                  <input
                     ref={inputRef as any}
                     name="email"
                     type="email"
@@ -218,7 +395,7 @@ export default function HostedFormPage({
                     placeholder="seu.email@exemplo.com"
                     className="w-full text-2xl md:text-4xl font-light bg-transparent border-0 border-b-2 border-white/20 focus:border-white focus:ring-0 placeholder:text-white/20 py-2 outline-none transition-colors dark-autofill"
                     onKeyDown={(e) => {
-                      if (e.key === 'Enter' && isStep4Valid) handleSubmit();
+                      if (e.key === 'Enter' && isFinalStepValid) handleSubmit();
                     }}
                   />
                 </div>
@@ -233,7 +410,7 @@ export default function HostedFormPage({
                     placeholder="(00) 00000-0000"
                     className="w-full text-2xl md:text-4xl font-light bg-transparent border-0 border-b-2 border-white/20 focus:border-white focus:ring-0 placeholder:text-white/20 py-2 outline-none transition-colors dark-autofill"
                     onKeyDown={(e) => {
-                      if (e.key === 'Enter' && isStep4Valid) handleSubmit();
+                      if (e.key === 'Enter' && isFinalStepValid) handleSubmit();
                     }}
                   />
                 </div>
@@ -242,7 +419,7 @@ export default function HostedFormPage({
               <div className="mt-12 flex items-center gap-4">
                 <button 
                   onClick={() => handleSubmit()}
-                  disabled={!isStep4Valid || loading}
+                  disabled={!isFinalStepValid || loading}
                   className="px-8 py-4 bg-white text-black font-semibold text-lg md:text-xl rounded-md disabled:opacity-30 disabled:cursor-not-allowed hover:bg-white/90 transition-all flex items-center"
                 >
                   {loading ? (

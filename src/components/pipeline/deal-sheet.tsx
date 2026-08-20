@@ -2,14 +2,28 @@
 
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { useCompletion } from "@ai-sdk/react";
-import { useEffect, useState, useTransition } from "react";
-import { Sparkles, Loader2, ArrowRight, Mail, Thermometer, Info, Trophy, ShieldCheck, ShieldX, Clock, XCircle } from "lucide-react";
+import { useCallback, useEffect, useState, useTransition } from "react";
+import { Sparkles, Loader2, ArrowRight, Mail, Thermometer, Info, Trophy, ShieldCheck, ShieldX, Clock, XCircle, Phone, Users, FileText, ArrowRightLeft, Bot } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { formatDistanceToNow } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SendEmailDialog } from "@/components/email/send-email-dialog";
 import { markDealWon, markDealLost, approveDealDiscount, rejectDealDiscount } from "@/app/actions/deals";
+import { getEntityTimeline } from "@/app/actions/activities";
+
+type TimelineActivity = Awaited<ReturnType<typeof getEntityTimeline>>["items"][number];
+
+const ACTIVITY_ICONS: Record<string, typeof Bot> = {
+  EMAIL: Mail,
+  CALL: Phone,
+  MEETING: Users,
+  NOTE_ADDED: FileText,
+  STAGE_CHANGED: ArrowRightLeft,
+  SYSTEM_LOG: Bot,
+};
 
 interface DealSummary {
   status: "OPEN" | "WON" | "LOST";
@@ -80,22 +94,55 @@ export function DealSheet({
     });
   }
 
+  const [summaryError, setSummaryError] = useState<string | null>(null);
+  const [emailError, setEmailError] = useState<string | null>(null);
+
   const { completion: summary, complete: completeSummary, isLoading: isLoadingSummary, stop: stopSummary } = useCompletion({
     api: `/api/v1/workspaces/${workspaceSlug}/ai/summary`,
+    onError: (err) => setSummaryError(err?.message || "Erro ao gerar resumo. Tente novamente."),
   });
 
   const { completion: emailDraft, complete: completeEmail, isLoading: isLoadingEmail, stop: stopEmail } = useCompletion({
     api: `/api/v1/workspaces/${workspaceSlug}/ai/email-draft`,
+    onError: (err) => setEmailError(err?.message || "Erro ao gerar rascunho. Tente novamente."),
   });
 
   const [leadScore, setLeadScore] = useState<{ score: number, reason: string, label: string } | null>(null);
   const [isLoadingScore, setIsLoadingScore] = useState(false);
 
+  // Timeline real do Deal (Últimas Atividades) — antes era placeholder estático
+  const [timelineItems, setTimelineItems] = useState<TimelineActivity[]>([]);
+  const [isLoadingTimeline, setIsLoadingTimeline] = useState(false);
+  const [timelineError, setTimelineError] = useState<string | null>(null);
+  const [timelineExpanded, setTimelineExpanded] = useState(false);
+
+  const loadTimeline = useCallback(async (currentDealId: string, full: boolean) => {
+    setIsLoadingTimeline(true);
+    setTimelineError(null);
+    try {
+      const result = await getEntityTimeline(workspaceSlug, { dealId: currentDealId }, undefined, full ? 50 : 3);
+      setTimelineItems(result.items);
+    } catch (err) {
+      setTimelineError(err instanceof Error ? err.message : "Erro ao carregar atividades.");
+    } finally {
+      setIsLoadingTimeline(false);
+    }
+  }, [workspaceSlug]);
+
+  function handleToggleTimeline() {
+    if (!dealId) return;
+    const nextExpanded = !timelineExpanded;
+    setTimelineExpanded(nextExpanded);
+    loadTimeline(dealId, nextExpanded);
+  }
+
   // Dispara a IA sempre que o Sheet abrir para um dealId específico
   useEffect(() => {
     if (dealId) {
+      setSummaryError(null);
+      setEmailError(null);
       completeSummary("", { body: { dealId } });
-      
+
       // Fetch Lead Score (Agent 3)
       setIsLoadingScore(true);
       fetch(`/api/v1/workspaces/${workspaceSlug}/ai/lead-scoring`, {
@@ -110,12 +157,21 @@ export function DealSheet({
       })
       .catch(() => setIsLoadingScore(false));
 
+      // Timeline real (mini, últimas 3)
+      setTimelineExpanded(false);
+      loadTimeline(dealId, false);
+
     } else {
       stopSummary();
       stopEmail();
       setLeadScore(null);
+      setSummaryError(null);
+      setEmailError(null);
+      setTimelineItems([]);
+      setTimelineError(null);
+      setTimelineExpanded(false);
     }
-  }, [dealId, workspaceSlug, completeSummary, stopSummary, stopEmail]);
+  }, [dealId, workspaceSlug, completeSummary, stopSummary, stopEmail, loadTimeline]);
 
   return (
     <Sheet open={!!dealId} onOpenChange={(open) => {
@@ -185,6 +241,16 @@ export function DealSheet({
                 <Loader2 className="w-5 h-5 animate-spin text-purple-500" />
                 <span className="text-xs font-medium">Analisando contexto...</span>
               </div>
+            ) : summaryError ? (
+              <div className="flex flex-col items-start gap-2 py-2">
+                <span className="text-xs text-red-600 dark:text-red-400">{summaryError}</span>
+                <button
+                  onClick={() => { setSummaryError(null); completeSummary("", { body: { dealId } }); }}
+                  className="text-xs font-medium text-primary hover:underline"
+                >
+                  Tentar novamente
+                </button>
+              </div>
             ) : summary ? (
               <div className="prose prose-sm dark:prose-invert">
                 <p>{summary}</p>
@@ -201,12 +267,12 @@ export function DealSheet({
               <h3 className="font-semibold text-sm">Rascunho de E-mail</h3>
             </div>
             {!emailDraft && !isLoadingEmail && (
-              <button 
-                onClick={() => completeEmail("", { body: { dealId } })}
+              <button
+                onClick={() => { setEmailError(null); completeEmail("", { body: { dealId } }); }}
                 className="text-xs px-3 py-1.5 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors font-medium flex items-center gap-1"
               >
                 <Sparkles className="w-3 h-3" />
-                Gerar Sugestão
+                {emailError ? "Tentar novamente" : "Gerar Sugestão"}
               </button>
             )}
           </div>
@@ -216,6 +282,8 @@ export function DealSheet({
               <Loader2 className="w-4 h-4 animate-spin text-primary" />
               <span className="text-xs">Escrevendo rascunho...</span>
             </div>
+          ) : emailError ? (
+            <p className="text-xs text-red-600 dark:text-red-400 text-center py-4">{emailError}</p>
           ) : emailDraft ? (
             <div className="bg-background border rounded-lg p-3 text-sm whitespace-pre-wrap font-sans text-muted-foreground relative">
               <Badge variant="outline" className="absolute -top-2.5 right-2 bg-background text-[10px] uppercase text-primary border-primary/20">Sugestão de IA</Badge>
@@ -305,25 +373,56 @@ export function DealSheet({
           </div>
         )}
 
-        {/* Fake Timeline for visual context */}
+        {/* Timeline real do Deal, via getEntityTimeline (Activity) */}
         <div>
           <h3 className="font-semibold text-sm mb-4 text-foreground/80">Últimas Atividades</h3>
-          <div className="space-y-4 border-l-2 border-muted ml-3 pl-4">
-            <div className="relative">
-              <div className="absolute -left-[21px] top-1 w-2.5 h-2.5 bg-primary rounded-full ring-4 ring-background" />
-              <p className="text-sm font-medium">Estágio alterado para Fechamento</p>
-              <span className="text-xs text-muted-foreground">Há 2 horas</span>
+
+          {isLoadingTimeline && timelineItems.length === 0 ? (
+            <div className="flex items-center gap-2 text-xs text-muted-foreground py-4">
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              Carregando atividades...
             </div>
-            <div className="relative">
-              <div className="absolute -left-[21px] top-1 w-2.5 h-2.5 bg-muted rounded-full ring-4 ring-background" />
-              <p className="text-sm font-medium text-muted-foreground">Nota adicionada pelo Vendedor</p>
-              <span className="text-xs text-muted-foreground">Ontem</span>
+          ) : timelineError ? (
+            <p className="text-xs text-red-600 dark:text-red-400 py-2">{timelineError}</p>
+          ) : timelineItems.length === 0 ? (
+            <p className="text-xs text-muted-foreground py-2">Nenhuma atividade registrada ainda.</p>
+          ) : (
+            <div className="space-y-4 border-l-2 border-muted ml-3 pl-4">
+              {timelineItems.map((item, idx) => {
+                const Icon = ACTIVITY_ICONS[item.type] ?? Bot;
+                return (
+                  <div key={item.id} className="relative">
+                    <div className={`absolute -left-[21px] top-1 w-2.5 h-2.5 rounded-full ring-4 ring-background ${idx === 0 ? "bg-primary" : "bg-muted"}`} />
+                    <p className={`text-sm font-medium flex items-center gap-1.5 ${idx === 0 ? "" : "text-muted-foreground"}`}>
+                      <Icon className="w-3 h-3 shrink-0" />
+                      {item.description || item.type}
+                    </p>
+                    <span className="text-xs text-muted-foreground">
+                      {item.performer?.name ? `${item.performer.name} · ` : ""}
+                      {formatDistanceToNow(new Date(item.createdAt), { addSuffix: true, locale: ptBR })}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
-          </div>
-          
-          <button className="mt-6 flex items-center gap-2 text-xs font-medium text-primary hover:underline">
-            Ver timeline completa <ArrowRight className="w-3 h-3" />
-          </button>
+          )}
+
+          {(timelineItems.length > 0 || timelineExpanded) && (
+            <button
+              onClick={handleToggleTimeline}
+              disabled={isLoadingTimeline}
+              className="mt-6 flex items-center gap-2 text-xs font-medium text-primary hover:underline disabled:opacity-50"
+            >
+              {isLoadingTimeline ? (
+                <Loader2 className="w-3 h-3 animate-spin" />
+              ) : (
+                <>
+                  {timelineExpanded ? "Mostrar menos" : "Ver timeline completa"}
+                  <ArrowRight className="w-3 h-3" />
+                </>
+              )}
+            </button>
+          )}
         </div>
 
       </SheetContent>
