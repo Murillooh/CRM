@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useOptimistic, useState, useTransition } from "react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { GripVertical, Building2, User, Clock, Briefcase, Pencil } from "lucide-react";
@@ -31,6 +31,29 @@ export function DealBoard({ workspaceSlug, stages }: { workspaceSlug: string; st
   const [error, setError] = useState<string | null>(null);
   const [editingDealId, setEditingDealId] = useState<string | null>(null);
 
+  // Move o card na hora, antes do servidor confirmar — arrastar não pode esperar
+  // o round-trip (persistir + registrar atividade + avaliar automações) pra se
+  // mexer na tela. Reconcilia sozinho com o estado real assim que a Server
+  // Action resolve (revalidatePath já traz `stages` atualizado de qualquer forma);
+  // se a mutação falhar, o catch do handleDrop cuida de mostrar o erro e o board
+  // volta pro estado real (useOptimistic descarta a atualização otimista).
+  const [optimisticStages, applyOptimisticMove] = useOptimistic(
+    stages,
+    (current: BoardStage[], move: { dealId: string; fromStageId: string; toStageId: string }) => {
+      let movedDeal: BoardDeal | undefined;
+      const withoutDeal = current.map((stage) => {
+        if (stage.id !== move.fromStageId) return stage;
+        const deal = stage.deals.find((d) => d.id === move.dealId);
+        if (deal) movedDeal = deal;
+        return { ...stage, deals: stage.deals.filter((d) => d.id !== move.dealId) };
+      });
+      if (!movedDeal) return current;
+      return withoutDeal.map((stage) =>
+        stage.id === move.toStageId ? { ...stage, deals: [movedDeal!, ...stage.deals] } : stage
+      );
+    }
+  );
+
   function handleTitleSave(dealId: string, currentTitle: string, nextTitle: string) {
     setEditingDealId(null);
     const trimmed = nextTitle.trim();
@@ -54,6 +77,7 @@ export function DealBoard({ workspaceSlug, stages }: { workspaceSlug: string; st
 
     setError(null);
     startTransition(async () => {
+      applyOptimisticMove({ dealId, fromStageId, toStageId: stageId });
       try {
         await moveDealStage(workspaceSlug, dealId, stageId);
       } catch (err: any) {
@@ -74,7 +98,7 @@ export function DealBoard({ workspaceSlug, stages }: { workspaceSlug: string; st
       )}
 
       <div className="flex h-full gap-4 min-w-max pb-4">
-        {stages.map((stage) => (
+        {optimisticStages.map((stage) => (
           <div
             key={stage.id}
             onDragOver={(e) => {

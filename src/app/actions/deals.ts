@@ -115,21 +115,24 @@ export async function moveDealStage(workspaceSlug: string, dealId: string, newSt
 
   const fromStageId = deal.stageId;
 
-  const updated = await db.deal.update({
-    where: { id: dealId },
-    data: { stageId: newStageId, stageEnteredAt: new Date() },
-  });
-
-  await db.activity.create({
-    data: {
-      workspaceId: workspace.id,
-      type: "STAGE_CHANGED",
-      dealId: deal.id,
-      performerId: user.id,
-      description: `Negócio movido para a etapa "${targetStage.name}".`,
-      metadata: { fromStageId, toStageId: newStageId },
-    },
-  });
+  // update + log de atividade não dependem um do outro — roda em paralelo em
+  // vez de esperar um round-trip inteiro do banco pra começar o outro.
+  const [updated] = await Promise.all([
+    db.deal.update({
+      where: { id: dealId },
+      data: { stageId: newStageId, stageEnteredAt: new Date() },
+    }),
+    db.activity.create({
+      data: {
+        workspaceId: workspace.id,
+        type: "STAGE_CHANGED",
+        dealId: deal.id,
+        performerId: user.id,
+        description: `Negócio movido para a etapa "${targetStage.name}".`,
+        metadata: { fromStageId, toStageId: newStageId },
+      },
+    }),
+  ]);
 
   await WorkflowEngine.evaluateEvent({
     workspaceId: workspace.id,
