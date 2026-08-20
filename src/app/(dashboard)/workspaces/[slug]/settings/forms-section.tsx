@@ -7,17 +7,18 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 interface FormsSectionProps {
-  workspaceId: string;
+  workspaceSlug: string;
 }
 
-export function FormsSection({ workspaceId }: FormsSectionProps) {
+export function FormsSection({ workspaceSlug }: FormsSectionProps) {
   const [copiedHtml, setCopiedHtml] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
 
   // O host será substituído no cliente
   const baseUrl = typeof window !== "undefined" ? window.location.origin : "";
-  const webhookUrl = `${baseUrl}/api/webhooks/forms/${workspaceId}`;
-  const hostedFormUrl = `${baseUrl}/f/${workspaceId}`;
+  // Link público usa o slug do workspace (curto, legível) em vez do id interno (cuid longo).
+  const webhookUrl = `${baseUrl}/api/webhooks/forms/${workspaceSlug}`;
+  const hostedFormUrl = `${baseUrl}/f/${workspaceSlug}`;
 
   const htmlSnippet = `<!-- Incorporar este formulário no seu site -->
 <form action="${webhookUrl}" method="POST" style="max-width: 400px; font-family: sans-serif; display: flex; flex-direction: column; gap: 12px;">

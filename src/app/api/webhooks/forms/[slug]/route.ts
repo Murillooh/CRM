@@ -14,20 +14,23 @@ export async function OPTIONS(request: NextRequest) {
 
 export async function POST(
   request: NextRequest,
-  props: { params: Promise<{ workspaceId: string }> }
+  props: { params: Promise<{ slug: string }> }
 ) {
   try {
     const params = await props.params;
-    const workspaceId = params.workspaceId;
+    const slug = params.slug;
 
-    // Verificar se workspace existe
+    // Verificar se workspace existe (link público usa o slug, curto e legível — não o id interno)
     const workspace = await db.workspace.findUnique({
-      where: { id: workspaceId },
+      where: { slug },
     });
 
     if (!workspace) {
       return NextResponse.json({ error: "Workspace não encontrado" }, { status: 404, headers: corsHeaders });
     }
+
+    // Mantém o restante da função inalterado: usa o id interno real como FK.
+    const workspaceId = workspace.id;
 
     // Tentar ler como JSON ou FormData
     let data: Record<string, any> = {};

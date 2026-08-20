@@ -6,9 +6,9 @@ import { CheckCircle2, ArrowRight, Loader2, Check } from "lucide-react";
 export default function HostedFormPage({
   params,
 }: {
-  params: Promise<{ workspaceId: string }>;
+  params: Promise<{ slug: string }>;
 }) {
-  const { workspaceId } = use(params);
+  const { slug } = use(params);
   
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -57,7 +57,7 @@ export default function HostedFormPage({
     setError(null);
 
     try {
-      const response = await fetch(`/api/webhooks/forms/${workspaceId}`, {
+      const response = await fetch(`/api/webhooks/forms/${slug}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
