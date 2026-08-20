@@ -2,23 +2,51 @@
 "use client";
 
 import { useState } from "react";
-import { Copy, Check, ExternalLink } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Copy, Check, ExternalLink, Loader2, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { updateFormSlug } from "@/app/actions/settings";
 
 interface FormsSectionProps {
   workspaceSlug: string;
+  formSlug: string | null;
 }
 
-export function FormsSection({ workspaceSlug }: FormsSectionProps) {
+export function FormsSection({ workspaceSlug, formSlug }: FormsSectionProps) {
+  const router = useRouter();
   const [copiedHtml, setCopiedHtml] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
+  const [savingSlug, setSavingSlug] = useState(false);
+  const [slugError, setSlugError] = useState<string | null>(null);
+  const [slugSaved, setSlugSaved] = useState(false);
+
+  async function onSaveSlug(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setSavingSlug(true);
+    setSlugError(null);
+    setSlugSaved(false);
+    try {
+      const formData = new FormData(event.currentTarget);
+      await updateFormSlug(workspaceSlug, formData);
+      setSlugSaved(true);
+      router.refresh();
+      setTimeout(() => setSlugSaved(false), 2500);
+    } catch (err) {
+      setSlugError(err instanceof Error ? err.message : "Erro ao salvar o nome do link.");
+    } finally {
+      setSavingSlug(false);
+    }
+  }
 
   // O host será substituído no cliente
   const baseUrl = typeof window !== "undefined" ? window.location.origin : "";
-  // Link público usa o slug do workspace (curto, legível) em vez do id interno (cuid longo).
-  const webhookUrl = `${baseUrl}/api/webhooks/forms/${workspaceSlug}`;
-  const hostedFormUrl = `${baseUrl}/f/${workspaceSlug}`;
+  // Link público usa o nome customizado (formSlug), se definido; senão cai no slug
+  // interno do workspace (curto, legível) — nunca no id interno (cuid longo).
+  const publicSlug = formSlug || workspaceSlug;
+  const webhookUrl = `${baseUrl}/api/webhooks/forms/${publicSlug}`;
+  const hostedFormUrl = `${baseUrl}/f/${publicSlug}`;
 
   const htmlSnippet = `<!-- Incorporar este formulário no seu site -->
 <form action="${webhookUrl}" method="POST" style="max-width: 400px; font-family: sans-serif; display: flex; flex-direction: column; gap: 12px;">
@@ -76,6 +104,55 @@ export function FormsSection({ workspaceSlug }: FormsSectionProps) {
 
   return (
     <div className="space-y-8">
+      {/* SEÇÃO DO NOME CUSTOMIZADO DO LINK */}
+      <div className="space-y-4">
+        <div>
+          <h4 className="text-base font-semibold text-foreground tracking-tight mb-1">
+            Nome do Link
+          </h4>
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            Escolha um nome curto pro link do formulário. Deixe em branco pra
+            usar o padrão do workspace.
+          </p>
+        </div>
+
+        <form onSubmit={onSaveSlug} className="space-y-2">
+          <Label htmlFor="formSlug" className="text-foreground/90 font-medium tracking-tight">
+            Nome customizado
+          </Label>
+          <div className="flex items-center gap-2">
+            <div className="flex items-center flex-1 shadow-sm rounded-md overflow-hidden ring-1 ring-border/50 focus-within:ring-2 focus-within:ring-primary/50 transition-all">
+              <span className="flex items-center px-3 bg-muted/50 text-sm text-muted-foreground h-10 border-r border-border/50 font-medium whitespace-nowrap">
+                {baseUrl.replace(/^https?:\/\//, "")}/f/
+              </span>
+              <Input
+                id="formSlug"
+                name="formSlug"
+                defaultValue={formSlug ?? ""}
+                placeholder={workspaceSlug}
+                disabled={savingSlug}
+                className="h-10 border-0 rounded-none bg-background/50 focus-visible:ring-0 shadow-none flex-1"
+              />
+            </div>
+            <Button type="submit" variant="secondary" disabled={savingSlug} className="gap-2 shrink-0">
+              {savingSlug ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+              Salvar
+            </Button>
+          </div>
+        </form>
+
+        {slugError && (
+          <p className="text-sm text-red-600 dark:text-red-400">{slugError}</p>
+        )}
+        {slugSaved && (
+          <p className="text-sm text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
+            <Check className="w-3.5 h-3.5" /> Nome do link salvo.
+          </p>
+        )}
+      </div>
+
+      <div className="border-t border-border/50"></div>
+
       {/* SEÇÃO DO LINK DIRETO (HOSPEDADO) */}
       <div className="space-y-4">
         <div>
@@ -91,9 +168,8 @@ export function FormsSection({ workspaceSlug }: FormsSectionProps) {
         <div className="flex items-center gap-2">
           <Input
             readOnly
-            value="Link do Formulário"
-            title={hostedFormUrl}
-            className="text-sm text-foreground/80"
+            value={hostedFormUrl}
+            className="font-mono text-sm text-primary/80"
           />
           <Button
             variant="secondary"

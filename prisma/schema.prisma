@@ -82,6 +82,10 @@ model Workspace {
   id        String   @id @default(cuid())
   name      String
   slug      String   @unique
+  // Nome curto e editável só pro link público do formulário (/f/[formSlug]) — separado
+  // do `slug` interno (usado em /workspaces/[slug]/...) pra não arriscar quebrar rotas
+  // internas quando o dono só quer um link mais bonito pra mandar pro cliente.
+  formSlug  String?  @unique @map("form_slug")
   logoUrl   String?
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")

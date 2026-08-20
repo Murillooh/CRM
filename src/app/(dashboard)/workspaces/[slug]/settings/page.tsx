@@ -218,7 +218,7 @@ export default async function SettingsPage(props: {
                 </div>
 
                 <div className="rounded-xl border bg-card p-6 md:p-8 shadow-sm">
-                  <FormsSection workspaceSlug={workspace.slug} />
+                  <FormsSection workspaceSlug={workspace.slug} formSlug={workspace.formSlug} />
                 </div>
               </div>
             )}

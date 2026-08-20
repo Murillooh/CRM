@@ -46,6 +46,51 @@ export async function updateWorkspace(workspaceSlug: string, formData: FormData)
   }
 }
 
+export async function updateFormSlug(workspaceSlug: string, formData: FormData) {
+  const { workspace, role } = await requireWorkspaceAccess(workspaceSlug);
+
+  if (role !== "OWNER" && role !== "ADMIN") {
+    throw new Error("Acesso negado. Apenas Administradores ou Donos podem alterar o link do formulário.");
+  }
+
+  const raw = (formData.get("formSlug") as string) || "";
+  const trimmed = raw.trim();
+
+  // Campo vazio = volta a usar o slug interno do workspace (comportamento padrão).
+  if (!trimmed) {
+    await db.workspace.update({
+      where: { id: workspace.id },
+      data: { formSlug: null },
+    });
+    revalidatePath(`/workspaces/${workspaceSlug}/settings`);
+    return;
+  }
+
+  const newFormSlug = trimmed.toLowerCase().replace(/[^a-z0-9-]/g, "-").replace(/-+/g, "-");
+
+  if (newFormSlug.length < 3) {
+    throw new Error("O nome do link precisa ter pelo menos 3 caracteres.");
+  }
+
+  // Precisa ser único tanto entre form slugs quanto contra slugs internos de outros
+  // workspaces, já que a rota /f/[slug] busca nos dois campos.
+  const [existingFormSlug, existingSlug] = await Promise.all([
+    db.workspace.findUnique({ where: { formSlug: newFormSlug } }),
+    db.workspace.findUnique({ where: { slug: newFormSlug } }),
+  ]);
+
+  if ((existingFormSlug && existingFormSlug.id !== workspace.id) || (existingSlug && existingSlug.id !== workspace.id)) {
+    throw new Error("Este nome de link já está em uso. Escolha outro.");
+  }
+
+  await db.workspace.update({
+    where: { id: workspace.id },
+    data: { formSlug: newFormSlug },
+  });
+
+  revalidatePath(`/workspaces/${workspaceSlug}/settings`);
+}
+
 export async function removeMember(workspaceSlug: string, userIdToRemove: string) {
   const { workspace, role, user: currentUser } = await requireWorkspaceAccess(workspaceSlug);
 

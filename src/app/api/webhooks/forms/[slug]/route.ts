@@ -20,9 +20,11 @@ export async function POST(
     const params = await props.params;
     const slug = params.slug;
 
-    // Verificar se workspace existe (link público usa o slug, curto e legível — não o id interno)
-    const workspace = await db.workspace.findUnique({
-      where: { slug },
+    // Verificar se workspace existe. Aceita tanto o formSlug (nome customizado do link
+    // público, editável em Configurações) quanto o slug interno (fallback quando o
+    // workspace nunca definiu um nome customizado).
+    const workspace = await db.workspace.findFirst({
+      where: { OR: [{ formSlug: slug }, { slug }] },
     });
 
     if (!workspace) {
