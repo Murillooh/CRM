@@ -256,3 +256,38 @@ export async function rejectDealDiscount(workspaceSlug: string, dealId: string) 
 
   revalidatePath(`/workspaces/${workspaceSlug}/deals`);
 }
+
+export async function getPipelineStages(workspaceSlug: string, pipelineId: string) {
+  const { workspace } = await requireWorkspaceAccess(workspaceSlug);
+
+  const pipeline = await db.pipeline.findFirst({
+    where: { id: pipelineId, workspaceId: workspace.id },
+    include: {
+      stages: {
+        orderBy: { order: "asc" },
+        include: {
+          deals: {
+            include: { company: true, contact: true },
+            orderBy: { updatedAt: "desc" }
+          }
+        }
+      }
+    }
+  });
+
+  if (!pipeline) return [];
+
+  return pipeline.stages.map((stage: any) => ({
+    id: stage.id,
+    name: stage.name,
+    deals: stage.deals.map((deal: any) => ({
+      id: deal.id,
+      title: deal.title,
+      value: deal.value ? deal.value.toNumber() : null,
+      currency: deal.currency,
+      updatedAt: deal.updatedAt,
+      company: deal.company ? { name: deal.company.name } : null,
+      contact: deal.contact ? { name: deal.contact.name } : null,
+    })),
+  }));
+}

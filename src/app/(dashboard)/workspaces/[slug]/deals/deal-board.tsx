@@ -1,12 +1,12 @@
 "use client";
 
-import { useOptimistic, useState, useTransition } from "react";
+import { useOptimistic, useState, useTransition, useEffect } from "react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { GripVertical, Building2, User, Clock, Briefcase, Pencil } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { moveDealStage, updateDealTitle } from "@/app/actions/deals";
+import { moveDealStage, updateDealTitle, getPipelineStages } from "@/app/actions/deals";
 
 type BoardDeal = {
   id: string;
@@ -25,11 +25,30 @@ type BoardStage = {
 };
 
 /** Kanban do Pipeline com drag-and-drop real (HTML5 DnD nativo, sem dependência extra). */
-export function DealBoard({ workspaceSlug, stages }: { workspaceSlug: string; stages: BoardStage[] }) {
+export function DealBoard({ workspaceSlug, pipelineId, stages }: { workspaceSlug: string; pipelineId: string; stages: BoardStage[] }) {
+  const [currentStages, setCurrentStages] = useState(stages);
   const [dragOverStageId, setDragOverStageId] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [editingDealId, setEditingDealId] = useState<string | null>(null);
+
+  useEffect(() => {
+    setCurrentStages(stages);
+  }, [stages]);
+
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      try {
+        const data = await getPipelineStages(workspaceSlug, pipelineId);
+        if (data && data.length > 0) {
+          setCurrentStages(data);
+        }
+      } catch (err) {
+        // Silencioso em caso de erro de rede
+      }
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [workspaceSlug, pipelineId]);
 
   // Move o card na hora, antes do servidor confirmar — arrastar não pode esperar
   // o round-trip (persistir + registrar atividade + avaliar automações) pra se
@@ -38,7 +57,7 @@ export function DealBoard({ workspaceSlug, stages }: { workspaceSlug: string; st
   // se a mutação falhar, o catch do handleDrop cuida de mostrar o erro e o board
   // volta pro estado real (useOptimistic descarta a atualização otimista).
   const [optimisticStages, applyOptimisticMove] = useOptimistic(
-    stages,
+    currentStages,
     (current: BoardStage[], move: { dealId: string; fromStageId: string; toStageId: string }) => {
       let movedDeal: BoardDeal | undefined;
       const withoutDeal = current.map((stage) => {

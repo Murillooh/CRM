@@ -5,7 +5,6 @@ import { DealSheet } from "@/components/pipeline/deal-sheet";
 import { DealDialog } from "./deal-dialog";
 import { DealBoard } from "./deal-board";
 import { CreatePipelineButton } from "./create-pipeline-button";
-import { LiveUpdates } from "./live-updates";
 
 export default async function DealsPage(props: { 
   params: Promise<{ slug: string }> | { slug: string },
@@ -63,7 +62,6 @@ export default async function DealsPage(props: {
 
   return (
     <div className="flex h-full flex-col">
-      <LiveUpdates workspaceSlug={params.slug} initialLastUpdate={initialLastUpdate ? initialLastUpdate.toISOString() : null} />
       <div className="flex items-center justify-between p-6 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-10">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">{pipeline.name}</h1>
@@ -85,6 +83,7 @@ export default async function DealsPage(props: {
       */}
       <DealBoard
         workspaceSlug={params.slug}
+        pipelineId={pipeline.id}
         stages={pipeline.stages.map((stage: any) => ({
           id: stage.id,
           name: stage.name,
