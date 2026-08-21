@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { requireWorkspaceAccess } from "@/lib/auth/guard";
-import { GmailProvider } from "@/lib/services/email/gmail-provider";
+import { GmailProvider, getEmailCallbackRedirectUri } from "@/lib/services/email/gmail-provider";
 import { encryptToken, serializeEncrypted, loadEncryptionKey } from "@/lib/services/token-crypto";
 
 export async function GET(req: NextRequest) {
@@ -30,7 +30,7 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const redirectUri = new URL("/api/v1/email-accounts/callback", req.url).toString();
+    const redirectUri = getEmailCallbackRedirectUri(req.url);
     const { accessToken, refreshToken, email } = await GmailProvider.exchangeCode(code, redirectUri);
     const key = loadEncryptionKey(encKeyRaw);
 

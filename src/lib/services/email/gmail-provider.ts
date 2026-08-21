@@ -17,6 +17,23 @@ function getOAuthCredentials() {
   return { clientId, clientSecret };
 }
 
+/**
+ * Redirect URI enviado ao Google no OAuth do Gmail. Tem que ser um valor FIXO,
+ * idêntico ao cadastrado em "Authorized redirect URIs" no Google Cloud Console —
+ * diferente de CORS/trustedOrigins, o Google não aceita wildcard de domínio aqui.
+ * Esse app responde em vários domínios/apelidos da Vercel ao mesmo tempo; construir
+ * a partir de req.url (a origem de quem clicou "Conectar e-mail") manda uma
+ * redirect_uri diferente a cada domínio usado e quebra com "Erro 400:
+ * redirect_uri_mismatch" sempre que não é o único domínio cadastrado no Google.
+ * Usa NEXT_PUBLIC_APP_URL (domínio canônico, fixo) quando definida; cai pra
+ * origem da requisição só como fallback de dev local, onde não há cadastro no
+ * Google pra bater de qualquer forma.
+ */
+export function getEmailCallbackRedirectUri(requestUrl: string): string {
+  const base = process.env.NEXT_PUBLIC_APP_URL || requestUrl;
+  return new URL("/api/v1/email-accounts/callback", base).toString();
+}
+
 export interface GmailCredentials {
   accessToken: string;
   refreshToken: string;

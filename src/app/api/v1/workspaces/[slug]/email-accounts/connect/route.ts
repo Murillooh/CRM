@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { randomBytes } from "node:crypto";
 import { requireWorkspaceAccess } from "@/lib/auth/guard";
-import { GmailProvider } from "@/lib/services/email/gmail-provider";
+import { GmailProvider, getEmailCallbackRedirectUri } from "@/lib/services/email/gmail-provider";
 
 /**
  * Inicia o OAuth do Gmail pra essa EmailAccount. Redireciona pro consentimento do Google;
@@ -16,7 +16,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ slug
       return NextResponse.redirect(new URL(`/workspaces/${slug}/settings?email_error=forbidden`, req.url));
     }
 
-    const redirectUri = new URL(`/api/v1/email-accounts/callback`, req.url).toString();
+    const redirectUri = getEmailCallbackRedirectUri(req.url);
     const nonce = randomBytes(16).toString("hex");
     const state = `${slug}:${nonce}`;
 
